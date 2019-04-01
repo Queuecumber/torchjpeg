@@ -85,6 +85,7 @@ std::vector<torch::Tensor> read_coefficients(const std::string &path) {
     struct jpeg_error_mgr srcerr;
 
     srcinfo.err = jpeg_std_error(&srcerr);
+    srcinfo.err->output_message = [](j_common_ptr cinfo) {};
     jpeg_create_decompress(&srcinfo);
 
     jpeg_stdio_src(&srcinfo, infile);
@@ -104,6 +105,7 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     struct jpeg_error_mgr jerr;
 
     cinfo.err = jpeg_std_error(&jerr);
+    cinfo.err->output_message = [](j_common_ptr cinfo) {};
     jpeg_create_compress(&cinfo);
 
     unsigned long compressed_size;
