@@ -112,10 +112,10 @@ void set_quantization(j_compress_ptr cinfo, torch::Tensor quantization) {
 }
 
 jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
-    jvirt_barray_ptr *block_arrays = new jvirt_barray_ptr[cinfo->num_components];
+    jvirt_barray_ptr *block_arrays = (jvirt_barray_ptr *)(*cinfo->mem->alloc_small)((j_common_ptr)cinfo, JPOOL_IMAGE, sizeof(jvirt_barray_ptr *) *  cinfo->num_components);
 
     for (int c = 0; c < cinfo->num_components; c++) {
-        block_arrays[c] = cinfo->mem->request_virt_barray((j_common_ptr) &cinfo,
+        block_arrays[c] = (*cinfo->mem->request_virt_barray)((j_common_ptr)cinfo,
                                        JPOOL_IMAGE,
                                        FALSE,
                                        cinfo->comp_info[c].width_in_blocks,
@@ -165,7 +165,7 @@ void write_coefficients(const std::string &path,
     cinfo.image_width = dct_dim_a[0][1];
     cinfo.image_height = dct_dim_a[0][0];
     cinfo.input_components = dimensions.size(0);
-    cinfo.in_color_space = JCS_RGB;
+    cinfo.in_color_space = dimensions.size(0) > 1 ? JCS_RGB : JCS_GRAYSCALE;
 
     jpeg_set_defaults(&cinfo);
 
