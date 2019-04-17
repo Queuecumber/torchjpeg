@@ -98,7 +98,7 @@ std::vector<torch::Tensor> read_coefficients(const std::string &path) {
     return ret;
 }
 
-std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality) {
+std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline=true) {
     // Use libjpeg to compress the pixels into a memory buffer, this is slightly wasteful
     // as it performs entropy coding
     struct jpeg_compress_struct cinfo;
@@ -118,7 +118,7 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     cinfo.in_color_space = pixels.size(0) > 1 ? JCS_RGB : JCS_GRAYSCALE;
 
     jpeg_set_defaults(&cinfo);
-    jpeg_set_quality(&cinfo, quality, FALSE);
+    jpeg_set_quality(&cinfo, quality, int(baseline));
 
     // No way that I know of to pass planar images to libjpeg
     auto channel_interleaved = (pixels * 255.f).to(torch::kByte).transpose(0,2).transpose(0,1).contiguous();
@@ -152,6 +152,8 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-    m.def("read_coefficients", &read_coefficients, "Read Coefficients");
-    m.def("quantize_at_quality", &quantize_at_quality, "Quantize at Quality");
+    m.def("read_coefficients", &read_coefficients, "Read DCT coefficients from the a JPEG file",
+        py::arg("path"));
+    m.def("quantize_at_quality", &quantize_at_quality, "Quantize pixels using libjpeg at the given quality",
+        py::arg("pixels"), py::arg("quality"), py::arg("baseline") = true);
 }
