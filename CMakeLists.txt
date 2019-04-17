@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(torchdctloader)
+project(torchjpeg)
 
 set(BOOST_ROOT /usr)
 
