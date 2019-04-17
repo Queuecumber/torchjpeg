@@ -106,9 +106,10 @@ std::vector<torch::Tensor> read_coefficients(const std::string &path) {
 
 void set_quantization(j_compress_ptr cinfo, torch::Tensor quantization) {
     int num_components = quantization.size(0);
+    std::copy_n(quantization.data<int16_t>(), DCTSIZE2, cinfo->quant_tbl_ptrs[0]->quantval);
 
-    for (int c = 0; c < num_components; c++) {
-        std::copy_n(quantization.data<int16_t>() + DCTSIZE2 * c, DCTSIZE2, cinfo->quant_tbl_ptrs[c]->quantval);
+    if (num_components > 1) {
+        std::copy_n(quantization.data<int16_t>() + DCTSIZE2, DCTSIZE2, cinfo->quant_tbl_ptrs[1]->quantval);
     }
 }
 
@@ -135,8 +136,8 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor=2) {
     jpeg_set_defaults(cinfo);
 
     cinfo->comp_info[0].component_id = 0;
-    cinfo->comp_info[0].h_samp_factor = 1;
-    cinfo->comp_info[0].v_samp_factor = 1;
+    cinfo->comp_info[0].h_samp_factor = color_samp_factor;
+    cinfo->comp_info[0].v_samp_factor = color_samp_factor;
     cinfo->comp_info[0].quant_tbl_no = 0;
     cinfo->comp_info[0].width_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_width) / 8.f);
     cinfo->comp_info[0].height_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_height) / 8.f);
@@ -144,11 +145,11 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor=2) {
     if (cinfo->num_components > 1) {
         for (int c = 1; c < cinfo->num_components; c++) {
             cinfo->comp_info[c].component_id = c;
-            cinfo->comp_info[c].h_samp_factor = color_samp_factor;
-            cinfo->comp_info[c].v_samp_factor = color_samp_factor;
+            cinfo->comp_info[c].h_samp_factor = 1;
+            cinfo->comp_info[c].v_samp_factor = 1;
             cinfo->comp_info[c].quant_tbl_no = 1;
-            cinfo->comp_info[c].width_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_width) / (8.f * float(color_samp_factor)));
-            cinfo->comp_info[c].height_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_height) / (8.f * float(color_samp_factor)));
+            cinfo->comp_info[c].width_in_blocks = (JDIMENSION) ceil(float(cinfo->jpeg_width) / (8.f * float(color_samp_factor)));
+            cinfo->comp_info[c].height_in_blocks = (JDIMENSION) ceil(float(cinfo->jpeg_height) / (8.f * float(color_samp_factor)));
         }
     }
 }
