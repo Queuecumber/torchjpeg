@@ -2,6 +2,7 @@
 #include <jpeglib.h>
 #include <numeric>
 #include <algorithm>
+#include <jpegint.h>
 #include "jdatadst.h"
 
 void extract_channel(const jpeg_decompress_struct &srcinfo,
@@ -126,6 +127,32 @@ jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
     return block_arrays;
 }
 
+void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor=2) {
+
+    cinfo->jpeg_width = cinfo->image_width;
+    cinfo->jpeg_height = cinfo->image_height;
+
+    jpeg_set_defaults(cinfo);
+
+    cinfo->comp_info[0].component_id = 0;
+    cinfo->comp_info[0].h_samp_factor = 1;
+    cinfo->comp_info[0].v_samp_factor = 1;
+    cinfo->comp_info[0].quant_tbl_no = 0;
+    cinfo->comp_info[0].width_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_width) / 8.f);
+    cinfo->comp_info[0].height_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_height) / 8.f);
+
+    if (cinfo->num_components > 1) {
+        for (int c = 1; c < cinfo->num_components; c++) {
+            cinfo->comp_info[c].component_id = c;
+            cinfo->comp_info[c].h_samp_factor = color_samp_factor;
+            cinfo->comp_info[c].v_samp_factor = color_samp_factor;
+            cinfo->comp_info[c].quant_tbl_no = 1;
+            cinfo->comp_info[c].width_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_width) / (8.f * float(color_samp_factor)));
+            cinfo->comp_info[c].height_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_height) / (8.f * float(color_samp_factor)));
+        }
+    }
+}
+
 void set_channel(const jpeg_compress_struct &cinfo,
         torch::Tensor coefficients,
         jvirt_barray_ptr *dest_coef_arrays,
@@ -133,7 +160,7 @@ void set_channel(const jpeg_compress_struct &cinfo,
         int &coefficients_written) {
     for (JDIMENSION rowNum = 0; rowNum < cinfo.comp_info[compNum].height_in_blocks; rowNum++) {
         JBLOCKARRAY rowPtrs = cinfo.mem->access_virt_barray((j_common_ptr) &cinfo, dest_coef_arrays[compNum],
-                                                              rowNum, 1, FALSE);
+                                                              rowNum, 1, TRUE);
 
         for (JDIMENSION blockNum = 0; blockNum < cinfo.comp_info[compNum].width_in_blocks; blockNum++) {
             std::copy_n(coefficients.data<int16_t>() + coefficients_written, DCTSIZE2, rowPtrs[0][blockNum]);
@@ -156,7 +183,7 @@ void write_coefficients(const std::string &path,
     struct jpeg_error_mgr srcerr;
 
     cinfo.err = jpeg_std_error(&srcerr);
-    cinfo.err->output_message = [](j_common_ptr cinfo) {};
+//    cinfo.err->output_message = [](j_common_ptr cinfo) {};
     jpeg_create_compress(&cinfo);
     jpeg_stdio_dest(&cinfo, outfile);
 
@@ -167,12 +194,12 @@ void write_coefficients(const std::string &path,
     cinfo.input_components = dimensions.size(0);
     cinfo.in_color_space = dimensions.size(0) > 1 ? JCS_RGB : JCS_GRAYSCALE;
 
-    jpeg_set_defaults(&cinfo);
+    fill_extended_defaults(&cinfo);
+
+    set_quantization(&cinfo, quantization);
 
     jvirt_barray_ptr *coef_dest = request_block_storage(&cinfo);
     jpeg_write_coefficients(&cinfo, coef_dest);
-
-    set_quantization(&cinfo, quantization);
 
     int cw = 0;
     set_channel(cinfo, Y_coefficients, coef_dest, 0, cw);
