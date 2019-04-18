@@ -3,8 +3,6 @@ import torchjpeg
 import argparse
 from PIL import Image
 from torchvision.transforms.functional import to_tensor
-import cv2
-import numpy as np
 
 
 parser = argparse.ArgumentParser(

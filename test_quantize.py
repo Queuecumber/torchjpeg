@@ -49,7 +49,7 @@ def block_idct(coeff, device=None):
     return im
 
 
-def pixels_for_channel(c, q):
+def pixels_for_channel(c, q, crop):
     dequantized = c.float() * q.float()
 
     s = block_idct(dequantized) + 128
@@ -57,6 +57,7 @@ def pixels_for_channel(c, q):
     s = s.view(1, s.shape[1] * s.shape[2], 8, 8)
     s = deblockify(s, 1, (c.shape[1] * 8, c.shape[2] * 8))
     s = s.squeeze(0).squeeze(0).numpy()
+    s = s[:crop[0], :crop[1]]
 
     return s
 
@@ -76,13 +77,13 @@ dimensions, quantization, Y_coefficients, CbCr_coefficients = torchjpeg.quantize
 
 channels = dimensions.shape[0]
 
-Y_spatial = pixels_for_channel(Y_coefficients, quantization[0])
+Y_spatial = pixels_for_channel(Y_coefficients, quantization[0], crop=dimensions[0])
 Y_spatial = Image.fromarray(Y_spatial.astype(np.uint8), mode='L')
 
 
 if channels > 1:
-    Cb_spatial = pixels_for_channel(CbCr_coefficients[0].unsqueeze(0), quantization[1])
-    Cr_spatial = pixels_for_channel(CbCr_coefficients[1].unsqueeze(0), quantization[2])
+    Cb_spatial = pixels_for_channel(CbCr_coefficients[0].unsqueeze(0), quantization[1], crop=dimensions[1])
+    Cr_spatial = pixels_for_channel(CbCr_coefficients[1].unsqueeze(0), quantization[2], crop=dimensions[2])
 
     Cb_spatial = Image.fromarray(Cb_spatial.astype(np.uint8), mode='L')
     Cr_spatial = Image.fromarray(Cr_spatial.astype(np.uint8), mode='L')
