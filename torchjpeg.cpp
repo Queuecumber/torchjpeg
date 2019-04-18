@@ -218,7 +218,7 @@ void write_coefficients(const std::string &path,
     struct jpeg_error_mgr srcerr;
 
     cinfo.err = jpeg_std_error(&srcerr);
-//    cinfo.err->output_message = [](j_common_ptr cinfo) {};
+    cinfo.err->output_message = [](j_common_ptr cinfo) {};
     jpeg_create_compress(&cinfo);
     jpeg_stdio_dest(&cinfo, outfile);
 
