@@ -5,6 +5,22 @@
 #include <jpegint.h>
 #include "jdatadst.h"
 
+long jdiv_round_up (long a, long b)
+/* Compute a/b rounded up to next integer, ie, ceil(a/b) */
+/* Assumes a >= 0, b > 0 */
+{
+    return (a + b - 1L) / b;
+}
+
+
+long jround_up (long a, long b)
+/* Compute a rounded up to next multiple of b, ie, ceil(a/b)*b */
+/* Assumes a >= 0, b > 0 */
+{
+    a += b - 1L;
+    return a - (a % b);
+}
+
 void extract_channel(const jpeg_decompress_struct &srcinfo,
         jvirt_barray_ptr *src_coef_arrays,
         int compNum,
@@ -117,12 +133,18 @@ jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
     jvirt_barray_ptr *block_arrays = (jvirt_barray_ptr *)(*cinfo->mem->alloc_small)((j_common_ptr)cinfo, JPOOL_IMAGE, sizeof(jvirt_barray_ptr *) *  cinfo->num_components);
 
     for (int c = 0; c < cinfo->num_components; c++) {
+
+        jpeg_component_info *compptr = &cinfo->comp_info[c];
+
+        int MCU_width = jdiv_round_up((long)cinfo->jpeg_width, (long)compptr->MCU_width);
+        int MCU_height = jdiv_round_up((long)cinfo->jpeg_height, (long)compptr->MCU_height);
+
         block_arrays[c] = (*cinfo->mem->request_virt_barray)((j_common_ptr)cinfo,
                                        JPOOL_IMAGE,
-                                       FALSE,
-                                       cinfo->comp_info[c].width_in_blocks,
-                                       cinfo->comp_info[c].height_in_blocks,
-                                       cinfo->comp_info[c].v_samp_factor);
+                                       TRUE,
+                                       MCU_width,
+                                       MCU_height,
+                                       compptr->v_samp_factor);
     }
 
     return block_arrays;
@@ -136,22 +158,34 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor=2) {
     jpeg_set_defaults(cinfo);
 
     cinfo->comp_info[0].component_id = 0;
-    cinfo->comp_info[0].h_samp_factor = color_samp_factor;
-    cinfo->comp_info[0].v_samp_factor = color_samp_factor;
+    cinfo->comp_info[0].h_samp_factor = 1;
+    cinfo->comp_info[0].v_samp_factor = 1;
     cinfo->comp_info[0].quant_tbl_no = 0;
-    cinfo->comp_info[0].width_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_width) / 8.f);
-    cinfo->comp_info[0].height_in_blocks = (JDIMENSION) round(float(cinfo->jpeg_height) / 8.f);
+    cinfo->comp_info[0].width_in_blocks = jdiv_round_up(cinfo->jpeg_width, DCTSIZE);
+    cinfo->comp_info[0].height_in_blocks = jdiv_round_up(cinfo->jpeg_height, DCTSIZE);
+    cinfo->comp_info[0].MCU_width = 1;
+    cinfo->comp_info[0].MCU_height = 1;
 
     if (cinfo->num_components > 1) {
+        cinfo->comp_info[0].h_samp_factor = color_samp_factor;
+        cinfo->comp_info[0].v_samp_factor = color_samp_factor;
+        cinfo->comp_info[0].MCU_width = color_samp_factor;
+        cinfo->comp_info[0].MCU_height = color_samp_factor;
+
         for (int c = 1; c < cinfo->num_components; c++) {
             cinfo->comp_info[c].component_id = c;
             cinfo->comp_info[c].h_samp_factor = 1;
             cinfo->comp_info[c].v_samp_factor = 1;
             cinfo->comp_info[c].quant_tbl_no = 1;
-            cinfo->comp_info[c].width_in_blocks = (JDIMENSION) ceil(float(cinfo->jpeg_width) / (8.f * float(color_samp_factor)));
-            cinfo->comp_info[c].height_in_blocks = (JDIMENSION) ceil(float(cinfo->jpeg_height) / (8.f * float(color_samp_factor)));
+            cinfo->comp_info[c].width_in_blocks = jdiv_round_up(cinfo->jpeg_width, DCTSIZE * color_samp_factor);
+            cinfo->comp_info[c].height_in_blocks = jdiv_round_up(cinfo->jpeg_width, DCTSIZE * color_samp_factor);
+            cinfo->comp_info[c].MCU_width = 1;
+            cinfo->comp_info[c].MCU_height = 1;
         }
     }
+
+    cinfo->min_DCT_h_scaled_size = DCTSIZE;
+    cinfo->min_DCT_v_scaled_size = DCTSIZE;
 }
 
 void set_channel(const jpeg_compress_struct &cinfo,
@@ -190,8 +224,8 @@ void write_coefficients(const std::string &path,
 
     auto dct_dim_a = dimensions.accessor<int, 2>();
 
-    cinfo.image_width = dct_dim_a[0][1];
     cinfo.image_height = dct_dim_a[0][0];
+    cinfo.image_width = dct_dim_a[0][1];
     cinfo.input_components = dimensions.size(0);
     cinfo.in_color_space = dimensions.size(0) > 1 ? JCS_RGB : JCS_GRAYSCALE;
 
