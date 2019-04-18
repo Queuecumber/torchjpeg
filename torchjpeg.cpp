@@ -2,7 +2,6 @@
 #include <jpeglib.h>
 #include <numeric>
 #include <algorithm>
-#include <jpegint.h>
 #include "jdatadst.h"
 
 long jdiv_round_up (long a, long b)
@@ -218,7 +217,6 @@ void write_coefficients(const std::string &path,
     struct jpeg_error_mgr srcerr;
 
     cinfo.err = jpeg_std_error(&srcerr);
-    cinfo.err->output_message = [](j_common_ptr cinfo) {};
     jpeg_create_compress(&cinfo);
     jpeg_stdio_dest(&cinfo, outfile);
 
@@ -258,7 +256,6 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     struct jpeg_error_mgr jerr;
 
     cinfo.err = jpeg_std_error(&jerr);
-    cinfo.err->output_message = [](j_common_ptr cinfo) {};
     jpeg_create_compress(&cinfo);
 
     unsigned long compressed_size;
