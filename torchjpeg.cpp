@@ -271,7 +271,7 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     jpeg_set_quality(&cinfo, quality, int(baseline));
 
     // No way that I know of to pass planar images to libjpeg
-    auto channel_interleaved = (pixels * 255.f).to(torch::kByte).transpose(0,2).transpose(0,1).contiguous();
+    auto channel_interleaved = (pixels * 255.f).round().to(torch::kByte).transpose(0,2).transpose(0,1).contiguous();
 
     jpeg_start_compress(&cinfo, TRUE);
 
