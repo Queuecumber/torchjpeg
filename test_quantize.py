@@ -73,6 +73,9 @@ args = parser.parse_args()
 im = Image.open(args.input)
 im_tensor = torchvision.transforms.functional.to_tensor(im)
 
+if im_tensor.shape[0] > 3:
+    im_tensor = im_tensor[:3]
+
 dimensions, quantization, Y_coefficients, CbCr_coefficients = torchjpeg.quantize_at_quality(im_tensor, args.quality)
 
 channels = dimensions.shape[0]

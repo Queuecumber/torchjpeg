@@ -15,5 +15,8 @@ args = parser.parse_args()
 
 im = to_tensor(Image.open(args.input))
 
+if im.shape[0] > 3:
+    im = im[:3]
+
 dimensions, quantization, Y_coefficients, CbCr_coefficients = torchjpeg.quantize_at_quality(im, args.quality)
 torchjpeg.write_coefficients(args.output, dimensions, quantization, Y_coefficients, CbCr_coefficients)
