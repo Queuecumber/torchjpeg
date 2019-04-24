@@ -94,8 +94,8 @@ std::vector<torch::Tensor> read_coefficients(const std::string &path) {
     }
 
     // start decompression
-    jpeg_decompress_struct srcinfo;
-    struct jpeg_error_mgr srcerr;
+    jpeg_decompress_struct srcinfo{};
+    struct jpeg_error_mgr srcerr{};
 
     srcinfo.err = jpeg_std_error(&srcerr);
     srcinfo.err->output_message = [](j_common_ptr cinfo) {};
@@ -121,22 +121,23 @@ void set_quantization(j_compress_ptr cinfo, torch::Tensor quantization) {
 }
 
 jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
-    jvirt_barray_ptr *block_arrays = (jvirt_barray_ptr *) (*cinfo->mem->alloc_small)((j_common_ptr) cinfo,
-                                                                                     JPOOL_IMAGE,
-                                                                                     sizeof(jvirt_barray_ptr *) *
-                                                                                     cinfo->num_components);
+    auto block_arrays = (jvirt_barray_ptr *) (*cinfo->mem->alloc_small)((j_common_ptr) cinfo,
+                                                                        JPOOL_IMAGE,
+                                                                        sizeof(jvirt_barray_ptr *) *
+                                                                        cinfo->num_components);
 
-    std::transform(cinfo->comp_info, cinfo->comp_info + cinfo->num_components, block_arrays, [&](auto compptr) {
-        int MCU_width = jdiv_round_up((long) cinfo->jpeg_width, (long) compptr->MCU_width);
-        int MCU_height = jdiv_round_up((long) cinfo->jpeg_height, (long) compptr->MCU_height);
+    std::transform(cinfo->comp_info, cinfo->comp_info + cinfo->num_components, block_arrays,
+                   [&](jpeg_component_info &compptr) {
+                       int MCU_width = jdiv_round_up((long) cinfo->jpeg_width, (long) compptr.MCU_width);
+                       int MCU_height = jdiv_round_up((long) cinfo->jpeg_height, (long) compptr.MCU_height);
 
-        return (cinfo->mem->request_virt_barray)((j_common_ptr) cinfo,
-                                                 JPOOL_IMAGE,
-                                                 TRUE,
-                                                 MCU_width,
-                                                 MCU_height,
-                                                 compptr->v_samp_factor);
-    });
+                       return (cinfo->mem->request_virt_barray)((j_common_ptr) cinfo,
+                                                                JPOOL_IMAGE,
+                                                                TRUE,
+                                                                MCU_width,
+                                                                MCU_height,
+                                                                compptr.v_samp_factor);
+                   });
 
     return block_arrays;
 }
@@ -205,8 +206,8 @@ void write_coefficients(const std::string &path,
         return;
     }
 
-    jpeg_compress_struct cinfo;
-    struct jpeg_error_mgr srcerr;
+    jpeg_compress_struct cinfo{};
+    struct jpeg_error_mgr srcerr{};
 
     cinfo.err = jpeg_std_error(&srcerr);
     jpeg_create_compress(&cinfo);
@@ -244,8 +245,8 @@ void write_coefficients(const std::string &path,
 std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true) {
     // Use libjpeg to compress the pixels into a memory buffer, this is slightly wasteful
     // as it performs entropy coding
-    struct jpeg_compress_struct cinfo;
-    struct jpeg_error_mgr jerr;
+    struct jpeg_compress_struct cinfo{};
+    struct jpeg_error_mgr jerr{};
 
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
@@ -278,8 +279,8 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     jpeg_destroy_compress(&cinfo);
 
     // Decompress memory buffer to DCT coefficients
-    jpeg_decompress_struct srcinfo;
-    struct jpeg_error_mgr srcerr;
+    jpeg_decompress_struct srcinfo{};
+    struct jpeg_error_mgr srcerr{};
 
     srcinfo.err = jpeg_std_error(&srcerr);
     jpeg_create_decompress(&srcinfo);
