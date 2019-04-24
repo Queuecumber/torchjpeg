@@ -4,28 +4,19 @@
 #include <algorithm>
 #include "jdatadst.h"
 
-long jdiv_round_up (long a, long b)
+long jdiv_round_up(long a, long b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */
 /* Assumes a >= 0, b > 0 */
 {
     return (a + b - 1L) / b;
 }
 
-
-long jround_up (long a, long b)
-/* Compute a rounded up to next multiple of b, ie, ceil(a/b)*b */
-/* Assumes a >= 0, b > 0 */
-{
-    a += b - 1L;
-    return a - (a % b);
-}
-
 void extract_channel(const jpeg_decompress_struct &srcinfo,
-        jvirt_barray_ptr *src_coef_arrays,
-        int compNum,
-        torch::Tensor coefficients,
-        torch::Tensor quantization,
-        int &coefficients_written) {
+                     jvirt_barray_ptr *src_coef_arrays,
+                     int compNum,
+                     torch::Tensor coefficients,
+                     torch::Tensor quantization,
+                     int &coefficients_written) {
     for (JDIMENSION rowNum = 0; rowNum < srcinfo.comp_info[compNum].height_in_blocks; rowNum++) {
         JBLOCKARRAY rowPtrs = srcinfo.mem->access_virt_barray((j_common_ptr) &srcinfo, src_coef_arrays[compNum],
                                                               rowNum, 1, FALSE);
@@ -36,7 +27,8 @@ void extract_channel(const jpeg_decompress_struct &srcinfo,
         }
     }
 
-    std::copy_n(srcinfo.comp_info[compNum].quant_table->quantval, DCTSIZE2, quantization.data<int16_t>() + DCTSIZE2 * compNum);
+    std::copy_n(srcinfo.comp_info[compNum].quant_table->quantval, DCTSIZE2,
+                quantization.data<int16_t>() + DCTSIZE2 * compNum);
 }
 
 std::vector<torch::Tensor> read_coefficients_using(jpeg_decompress_struct &srcinfo) {
@@ -129,27 +121,27 @@ void set_quantization(j_compress_ptr cinfo, torch::Tensor quantization) {
 }
 
 jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
-    jvirt_barray_ptr *block_arrays = (jvirt_barray_ptr *)(*cinfo->mem->alloc_small)((j_common_ptr)cinfo, JPOOL_IMAGE, sizeof(jvirt_barray_ptr *) *  cinfo->num_components);
+    jvirt_barray_ptr *block_arrays = (jvirt_barray_ptr *) (*cinfo->mem->alloc_small)((j_common_ptr) cinfo,
+                                                                                     JPOOL_IMAGE,
+                                                                                     sizeof(jvirt_barray_ptr *) *
+                                                                                     cinfo->num_components);
 
-    for (int c = 0; c < cinfo->num_components; c++) {
+    std::transform(cinfo->comp_info, cinfo->comp_info + cinfo->num_components, block_arrays, [&](auto compptr) {
+        int MCU_width = jdiv_round_up((long) cinfo->jpeg_width, (long) compptr->MCU_width);
+        int MCU_height = jdiv_round_up((long) cinfo->jpeg_height, (long) compptr->MCU_height);
 
-        jpeg_component_info *compptr = &cinfo->comp_info[c];
-
-        int MCU_width = jdiv_round_up((long)cinfo->jpeg_width, (long)compptr->MCU_width);
-        int MCU_height = jdiv_round_up((long)cinfo->jpeg_height, (long)compptr->MCU_height);
-
-        block_arrays[c] = (*cinfo->mem->request_virt_barray)((j_common_ptr)cinfo,
-                                       JPOOL_IMAGE,
-                                       TRUE,
-                                       MCU_width,
-                                       MCU_height,
-                                       compptr->v_samp_factor);
-    }
+        return (cinfo->mem->request_virt_barray)((j_common_ptr) cinfo,
+                                                 JPOOL_IMAGE,
+                                                 TRUE,
+                                                 MCU_width,
+                                                 MCU_height,
+                                                 compptr->v_samp_factor);
+    });
 
     return block_arrays;
 }
 
-void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor=2) {
+void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2) {
 
     cinfo->jpeg_width = cinfo->image_width;
     cinfo->jpeg_height = cinfo->image_height;
@@ -188,13 +180,13 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor=2) {
 }
 
 void set_channel(const jpeg_compress_struct &cinfo,
-        torch::Tensor coefficients,
-        jvirt_barray_ptr *dest_coef_arrays,
-        int compNum,
-        int &coefficients_written) {
+                 torch::Tensor coefficients,
+                 jvirt_barray_ptr *dest_coef_arrays,
+                 int compNum,
+                 int &coefficients_written) {
     for (JDIMENSION rowNum = 0; rowNum < cinfo.comp_info[compNum].height_in_blocks; rowNum++) {
         JBLOCKARRAY rowPtrs = cinfo.mem->access_virt_barray((j_common_ptr) &cinfo, dest_coef_arrays[compNum],
-                                                              rowNum, 1, TRUE);
+                                                            rowNum, 1, TRUE);
 
         for (JDIMENSION blockNum = 0; blockNum < cinfo.comp_info[compNum].width_in_blocks; blockNum++) {
             std::copy_n(coefficients.data<int16_t>() + coefficients_written, DCTSIZE2, rowPtrs[0][blockNum]);
@@ -204,10 +196,10 @@ void set_channel(const jpeg_compress_struct &cinfo,
 }
 
 void write_coefficients(const std::string &path,
-        torch::Tensor dimensions,
-        torch::Tensor quantization,
-        torch::Tensor Y_coefficients,
-        torch::Tensor CrCb_coefficients = torch::empty({}, torch::kShort)) {
+                        torch::Tensor dimensions,
+                        torch::Tensor quantization,
+                        torch::Tensor Y_coefficients,
+                        torch::Tensor CrCb_coefficients = torch::empty({}, torch::kShort)) {
     FILE *outfile;
     if ((outfile = fopen(path.c_str(), "wb")) == nullptr) {
         return;
@@ -249,7 +241,7 @@ void write_coefficients(const std::string &path,
     fclose(outfile);
 }
 
-std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline=true) {
+std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true) {
     // Use libjpeg to compress the pixels into a memory buffer, this is slightly wasteful
     // as it performs entropy coding
     struct jpeg_compress_struct cinfo;
@@ -259,7 +251,7 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     jpeg_create_compress(&cinfo);
 
     unsigned long compressed_size;
-    unsigned char *buffer = NULL;
+    unsigned char *buffer = nullptr;
     jpeg_mem_dest(&cinfo, &buffer, &compressed_size);
 
     cinfo.image_width = pixels.size(2);
@@ -271,13 +263,14 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     jpeg_set_quality(&cinfo, quality, int(baseline));
 
     // No way that I know of to pass planar images to libjpeg
-    auto channel_interleaved = (pixels * 255.f).round().to(torch::kByte).transpose(0,2).transpose(0,1).contiguous();
+    auto channel_interleaved = (pixels * 255.f).round().to(torch::kByte).transpose(0, 2).transpose(0, 1).contiguous();
 
     jpeg_start_compress(&cinfo, TRUE);
 
     JSAMPROW row_pointer[1];
     while (cinfo.next_scanline < cinfo.image_height) {
-        row_pointer[0] = channel_interleaved.data<JSAMPLE>() + cinfo.next_scanline * channel_interleaved.size(1) * channel_interleaved.size(2);
+        row_pointer[0] = channel_interleaved.data<JSAMPLE>() +
+                         cinfo.next_scanline * channel_interleaved.size(1) * channel_interleaved.size(2);
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
 
@@ -303,10 +296,10 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("read_coefficients", &read_coefficients, "Read DCT coefficients from the a JPEG file",
-        py::arg("path"));
+          py::arg("path"));
     m.def("write_coefficients", &write_coefficients, "Write DCT coefficients to a JPEG file",
           py::arg("path"), py::arg("dimensions"), py::arg("quantization"), py::arg("Y_coefficients"),
           py::arg("CrCb_coefficients") = torch::empty({}, torch::kShort));
     m.def("quantize_at_quality", &quantize_at_quality, "Quantize pixels using libjpeg at the given quality",
-        py::arg("pixels"), py::arg("quality"), py::arg("baseline") = true);
+          py::arg("pixels"), py::arg("quality"), py::arg("baseline") = true);
 }
