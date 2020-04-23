@@ -293,7 +293,7 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     auto ret = read_coefficients_using(srcinfo);
 
     jpeg_destroy_decompress(&srcinfo);
-    free(buffer);
+    std::free(buffer);
 
     return ret;
 }
