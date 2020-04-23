@@ -1,8 +1,11 @@
 #include <torch/extension.h>
-#include <jpeglib.h>
 #include <numeric>
 #include <algorithm>
-#include "jdatadst.h"
+
+extern "C" {
+    #include <jpeglib.h>
+    #include "jdatadst.h"
+}
 
 long jdiv_round_up(long a, long b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */

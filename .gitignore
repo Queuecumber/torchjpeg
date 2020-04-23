@@ -1,2 +1,7 @@
 .idea
 cmake-build-*
+.venv
+.vscode
+build
+dist
+torchjpeg.egg-info
