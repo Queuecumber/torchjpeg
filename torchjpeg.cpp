@@ -1,11 +1,12 @@
 #include <torch/extension.h>
+
 #include <numeric>
 #include <algorithm>
+#include <array>
+#include <vector>
 
-extern "C" {
-    #include <jpeglib.h>
-    #include "jdatadst.h"
-}
+#include <jpeglib.h>
+#include "jdatadst.h"
 
 long jdiv_round_up(long a, long b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */
@@ -245,6 +246,12 @@ void write_coefficients(const std::string &path,
     fclose(outfile);
 }
 
+extern "C" {
+    void free_buffer(unsigned char *buffer) {
+        free(buffer);
+    }
+}
+
 std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true) {
     // Use libjpeg to compress the pixels into a memory buffer, this is slightly wasteful
     // as it performs entropy coding
@@ -293,7 +300,7 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
     auto ret = read_coefficients_using(srcinfo);
 
     jpeg_destroy_decompress(&srcinfo);
-    std::free(buffer);
+    free_buffer(buffer);
 
     return ret;
 }
