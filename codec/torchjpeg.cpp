@@ -6,7 +6,7 @@
 #include <vector>
 
 #include <jpeglib.h>
-#include "jdatadst.h"
+#include "jdatadst.hpp"
 
 long jdiv_round_up(long a, long b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */
@@ -26,13 +26,13 @@ void extract_channel(const jpeg_decompress_struct &srcinfo,
                                                               rowNum, 1, FALSE);
 
         for (JDIMENSION blockNum = 0; blockNum < srcinfo.comp_info[compNum].width_in_blocks; blockNum++) {
-            std::copy_n(rowPtrs[0][blockNum], DCTSIZE2, coefficients.data<int16_t>() + coefficients_written);
+            std::copy_n(rowPtrs[0][blockNum], DCTSIZE2, coefficients.data_ptr<int16_t>() + coefficients_written);
             coefficients_written += DCTSIZE2;
         }
     }
 
     std::copy_n(srcinfo.comp_info[compNum].quant_table->quantval, DCTSIZE2,
-                quantization.data<int16_t>() + DCTSIZE2 * compNum);
+                quantization.data_ptr<int16_t>() + DCTSIZE2 * compNum);
 }
 
 std::vector<torch::Tensor> read_coefficients_using(jpeg_decompress_struct &srcinfo) {
@@ -117,10 +117,10 @@ std::vector<torch::Tensor> read_coefficients(const std::string &path) {
 
 void set_quantization(j_compress_ptr cinfo, torch::Tensor quantization) {
     int num_components = quantization.size(0);
-    std::copy_n(quantization.data<int16_t>(), DCTSIZE2, cinfo->quant_tbl_ptrs[0]->quantval);
+    std::copy_n(quantization.data_ptr<int16_t>(), DCTSIZE2, cinfo->quant_tbl_ptrs[0]->quantval);
 
     if (num_components > 1) {
-        std::copy_n(quantization.data<int16_t>() + DCTSIZE2, DCTSIZE2, cinfo->quant_tbl_ptrs[1]->quantval);
+        std::copy_n(quantization.data_ptr<int16_t>() + DCTSIZE2, DCTSIZE2, cinfo->quant_tbl_ptrs[1]->quantval);
     }
 }
 
@@ -194,7 +194,7 @@ void set_channel(const jpeg_compress_struct &cinfo,
                                                             rowNum, 1, TRUE);
 
         for (JDIMENSION blockNum = 0; blockNum < cinfo.comp_info[compNum].width_in_blocks; blockNum++) {
-            std::copy_n(coefficients.data<int16_t>() + coefficients_written, DCTSIZE2, rowPtrs[0][blockNum]);
+            std::copy_n(coefficients.data_ptr<int16_t>() + coefficients_written, DCTSIZE2, rowPtrs[0][blockNum]);
             coefficients_written += DCTSIZE2;
         }
     }
@@ -247,6 +247,7 @@ void write_coefficients(const std::string &path,
 }
 
 extern "C" {
+    // On some machines, this free will be name-mangled if it isn't in extern "C" here
     void free_buffer(unsigned char *buffer) {
         free(buffer);
     }
@@ -280,7 +281,7 @@ std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality
 
     JSAMPROW row_pointer[1];
     while (cinfo.next_scanline < cinfo.image_height) {
-        row_pointer[0] = channel_interleaved.data<JSAMPLE>() +
+        row_pointer[0] = channel_interleaved.data_ptr<JSAMPLE>() +
                          cinfo.next_scanline * channel_interleaved.size(1) * channel_interleaved.size(2);
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
