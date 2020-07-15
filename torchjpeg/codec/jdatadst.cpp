@@ -19,11 +19,12 @@
 #include "jinclude.hpp"
 #include "jpeglib.h"
 #include "jerror.h"
+#include <cstdlib>
 
-#ifndef HAVE_STDLIB_H		/* <stdlib.h> should declare malloc(),free() */
-extern void * malloc JPP((size_t size));
-extern void free JPP((void *ptr));
-#endif
+// #ifndef HAVE_STDLIB_H		/* <stdlib.h> should declare malloc(),free() */
+// extern void * malloc JPP((size_t size));
+// extern void free JPP((void *ptr));
+// #endif
 
 
 /* Expanded data destination object for stdio output */
