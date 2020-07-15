@@ -68,7 +68,7 @@ parser.add_argument('input', help='Input image, must be a JPEG')
 parser.add_argument('output', help='Output image, should be lossless for best results')
 args = parser.parse_args()
 
-dimensions, quantization, Y_coefficients, CbCr_coefficients = torchjpeg.read_coefficients(args.input)
+dimensions, quantization, Y_coefficients, CbCr_coefficients = torchjpeg.codec.read_coefficients(args.input)
 
 channels = dimensions.shape[0]
 
