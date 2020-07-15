@@ -35,7 +35,7 @@ void extract_channel(const jpeg_decompress_struct &srcinfo,
                 quantization.data_ptr<int16_t>() + DCTSIZE2 * compNum);
 }
 
-std::vector<torch::Tensor> read_coefficients_using(jpeg_decompress_struct &srcinfo) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> read_coefficients_using(jpeg_decompress_struct &srcinfo) {
     jpeg_read_header(&srcinfo, TRUE);
 
     // channels x 2
@@ -63,7 +63,7 @@ std::vector<torch::Tensor> read_coefficients_using(jpeg_decompress_struct &srcin
     extract_channel(srcinfo, src_coef_arrays, 0, Y_coefficients, quantization, cw);
 
     // extract CrCb channels
-    auto CrCb_coefficients = torch::empty({}, torch::kShort);
+    auto CrCb_coefficients = std::optional<torch::Tensor>{};
 
     if (srcinfo.num_components > 1) {
         CrCb_coefficients = torch::empty({2,
@@ -74,8 +74,8 @@ std::vector<torch::Tensor> read_coefficients_using(jpeg_decompress_struct &srcin
                                          }, torch::kShort);
 
         cw = 0;
-        extract_channel(srcinfo, src_coef_arrays, 1, CrCb_coefficients, quantization, cw);
-        extract_channel(srcinfo, src_coef_arrays, 2, CrCb_coefficients, quantization, cw);
+        extract_channel(srcinfo, src_coef_arrays, 1, *CrCb_coefficients, quantization, cw);
+        extract_channel(srcinfo, src_coef_arrays, 2, *CrCb_coefficients, quantization, cw);
     }
 
 
@@ -90,7 +90,7 @@ std::vector<torch::Tensor> read_coefficients_using(jpeg_decompress_struct &srcin
     };
 }
 
-std::vector<torch::Tensor> read_coefficients(const std::string &path) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> read_coefficients(const std::string &path) {
     // open the file
     FILE *infile;
     if ((infile = fopen(path.c_str(), "rb")) == nullptr) {
@@ -204,7 +204,7 @@ void write_coefficients(const std::string &path,
                         torch::Tensor dimensions,
                         torch::Tensor quantization,
                         torch::Tensor Y_coefficients,
-                        torch::Tensor CrCb_coefficients = torch::empty({}, torch::kShort)) {
+                        std::optional<torch::Tensor> CrCb_coefficients = std::nullopt) {
     FILE *outfile;
     if ((outfile = fopen(path.c_str(), "wb")) == nullptr) {
         return;
@@ -221,8 +221,8 @@ void write_coefficients(const std::string &path,
 
     cinfo.image_height = dct_dim_a[0][0];
     cinfo.image_width = dct_dim_a[0][1];
-    cinfo.input_components = dimensions.size(0);
-    cinfo.in_color_space = dimensions.size(0) > 1 ? JCS_RGB : JCS_GRAYSCALE;
+    cinfo.input_components = CrCb_coefficients ? 3 : 1;
+    cinfo.in_color_space = CrCb_coefficients ? JCS_RGB : JCS_GRAYSCALE;
 
     fill_extended_defaults(&cinfo);
 
@@ -234,10 +234,10 @@ void write_coefficients(const std::string &path,
     int cw = 0;
     set_channel(cinfo, Y_coefficients, coef_dest, 0, cw);
 
-    if (cinfo.num_components > 1) {
+    if (CrCb_coefficients) {
         cw = 0;
-        set_channel(cinfo, CrCb_coefficients, coef_dest, 1, cw);
-        set_channel(cinfo, CrCb_coefficients, coef_dest, 2, cw);
+        set_channel(cinfo, *CrCb_coefficients, coef_dest, 1, cw);
+        set_channel(cinfo, *CrCb_coefficients, coef_dest, 2, cw);
     }
 
     jpeg_finish_compress(&cinfo);
@@ -253,7 +253,7 @@ extern "C" {
     }
 }
 
-std::vector<torch::Tensor> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true) {
     // Use libjpeg to compress the pixels into a memory buffer, this is slightly wasteful
     // as it performs entropy coding
     struct jpeg_compress_struct cinfo{};
@@ -311,7 +311,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
           py::arg("path"));
     m.def("write_coefficients", &write_coefficients, "Write DCT coefficients to a JPEG file",
           py::arg("path"), py::arg("dimensions"), py::arg("quantization"), py::arg("Y_coefficients"),
-          py::arg("CrCb_coefficients") = torch::empty({}, torch::kShort));
+          py::arg("CrCb_coefficients") = std::nullopt);
     m.def("quantize_at_quality", &quantize_at_quality, "Quantize pixels using libjpeg at the given quality",
           py::arg("pixels"), py::arg("quality"), py::arg("baseline") = true);
 }
