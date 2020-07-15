@@ -1,4 +1,5 @@
-.idea
-cmake-build-*
 .venv
 .vscode
+build
+dist
+*.egg-info
