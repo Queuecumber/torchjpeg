@@ -1,6 +1,6 @@
 import torch
 from torch import Tensor
-from .stats import Stats
+from ._stats import Stats
 from pathlib import Path
 
 
