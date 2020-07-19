@@ -1,8 +1,24 @@
 import torch
+from torch import Tensor
 import numpy as np
 
 
-def blocking_effect_factor(im):
+def blocking_effect_factor(im: Tensor) -> Tensor:
+    r"""
+    Computes the blocking effect factor (BEF) of an image as defined in [1].
+
+    Blocking effect factor is used as part of :py:func:`psnrb` but can also be used 
+    as an objective measure of "blockiness".
+
+    Args:
+        im (Tensor): Image of shape :math:`(N, C, H, W)`.
+
+    Returns:
+        Tensor: The BEF for each image of shape :math:`(N)`.
+
+    Note:
+        [1] Tadala, Trinadh, and Sri E. Venkata Narayana. "A Novel PSNR-B Approach for Evaluating the Quality of De-blocked Images." (2012).
+    """
     block_size = 8
 
     block_horizontal_positions = torch.arange(7,im.shape[3]-1,8)
@@ -32,7 +48,33 @@ def blocking_effect_factor(im):
     return bef
 
 
-def psnrb(target, input):
+def psnrb(input: Tensor, target: Tensor) -> Tensor:
+    r"""
+    Computes the peak signal-to-noise ratio with blocking effect factor from [1]. 
+
+    PSNR-B augments the PSNR measure by including the "blockiness" of the degraded image as a way to reduce
+    the PSNR. For multichannel inputs, the PSNR-B is computed separately for each channel and then averaged.
+
+    Args:
+        input (Tensor): The input images of shape :math:`(N, C, H, W)`.
+        target (Tensor): The target images of shape :math:`(N, C, H, W)`.
+
+    Returns:
+        Tensor: The PSNR-B of each image in the batch of shape :math:`(N)`.
+
+    Warning:
+        Unlike most metrics this is not symmetric and the order of the arguents is imporant. Blocking effect factor
+        is only computed for the degraded image, so if the arguments are reversed, there will be very little difference 
+        between this and :py:func:`psnr`.
+
+    Note:
+        PSNR-B is computed as
+
+        .. math::
+            P(x, y) = 10 \log_{10}\left(\frac{1}{\text{MSE}(x, y) + \text{BEF}(x)}\right)
+
+        [1] Tadala, Trinadh, and Sri E. Venkata Narayana. "A Novel PSNR-B Approach for Evaluating the Quality of De-blocked Images." (2012).
+    """
     total = 0
     for c in range(input.shape[1]):
         mse = torch.nn.functional.mse_loss(input[:, c:c+1, :, :], target[:, c:c+1, :, :], reduction='none')
