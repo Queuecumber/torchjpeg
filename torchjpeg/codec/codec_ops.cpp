@@ -335,7 +335,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
             Optional[Tensor]
                 A :math:`\left(2, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor containing the Cb and Cr channel DCT coefficients for each :math:`8 \times 8` block, or `None` if the image is grayscale.
 
-            Notes
+            Note
             -----
             The return values from this function are "raw" values, as output by libjpeg with no transformation. In particular, the DCT coefficients are quantized and will need
             to be dequantized using the returned quantization matrices before they can be converted into displayable image pixels. They will likely also need cropping and the chroma
@@ -360,7 +360,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
             CbCr_coefficients : Optional[Tensor]
                 A :math:`\left(2, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor of Cb and Cr channel DCT coefficients separated into :math:`8 \times 8` blocks.
 
-            Notes
+            Note
             -----
             The parameters passed to this function are in the same "raw" format as returned by :py:func:`read_coefficients`. The DCT coefficients must be appropriately quantized and the color 
             channel coefficients must be downsampled if desired. The type of the Tensors must be :code:`torch.short` except the :code:`dimensions` parameter which must be :code:`torch.int`.
@@ -370,7 +370,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("quantize_at_quality", &quantize_at_quality, R"(
             quantize_at_quality(pixels: Tensor, quality: int, baseline: bool = true) -> Tuple[Tensor, Tensor, Tensor, Optional[Tensor]]
 
-            Quantize pixels using libjpeg at the given quality.
+            Quantize pixels using libjpeg at the given quality. By using this function instead of :py:mod:`torchjpeg.quantization` the result
+            is guaranteed to be exactly the same as if the JPEG was quantized using an image library like Pillow and the coefficients are returned
+            directly without needing to be recomputed from pixels.
 
             Parameters
             ----------
@@ -393,7 +395,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
             Optional[Tensor]
                 A :math:`\left(2, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor containing the Cb and Cr channel DCT coefficients for each :math:`8 \times 8` block, or `None` if the image is grayscale.
 
-            Notes
+            Note
             -----
             The output format of this function is the same as that of :py:func:`read_coefficients`. 
           )",

@@ -1,7 +1,6 @@
 r"""
 Provides access to low-level JPEG operations using libjpeg.
-By using libjpeg directly, small rounding errors caused by a python reimplementation of the JPEG algorithm are avoided. 
-This package is ideal if that kind of precision is required.
+By using libjpeg directly, coefficients can be loaded or saved to JPEG files directly with needing to be recomputed.
 In addtion to the C++ implemented low-level operations, two python convenience functions are exported that can decode the ressulting coefficients to pixels.
 """
 import torch
@@ -38,7 +37,7 @@ def pixels_for_channel(channel: Tensor, quantization: Tensor, crop: Optional[Ten
     torch.Tensor
         A :math:`\left(H, W \right)` Tensor containing the pixel values of the channel in [0, 1]
 
-    Notes
+    Note
     -----
     This function takes inputs in the same format as returned by :py:func:`read_coefficients` separated into a single channel.
     """
@@ -59,6 +58,9 @@ def reconstruct_full_image(y_coefficients: Tensor, quantization: Tensor, cbcr_co
     r"""
     Converts quantized DCT coefficients into an image.
 
+    This function is designed to work on the output of :py:func:`read_coefficients` and py:func:`quantize_at_quality`. Note that the color channel coefficients
+    will be upsampled by 2 as chroma subsampling is currently assumed. If the image is color, it will be converted from YCbCr to RGB. 
+
     Parameters
     ----------
     y_coefficients : torch.Tensor
@@ -73,13 +75,7 @@ def reconstruct_full_image(y_coefficients: Tensor, quantization: Tensor, cbcr_co
     Returns
     -------
     torch.Tensor
-        A :math:`\left(C, H, W \right)` Tensor containing the image pixels in pytorch format (normalized to [0, 1])
-
-    Notes
-    -----
-    This function is designed to work on the output of py:func:`read_coefficients` and py:func:`quantize_at_quality`. Note that the color channel coefficients
-    will be upsampled by 2 as chroma subsampling is currently assumed. If the image is color, it will be converted from YCbCr to RGB. 
-    
+        A :math:`\left(C, H, W \right)` Tensor containing the image pixels in pytorch format (normalized to [0, 1])    
     """
     y = pixels_for_channel(y_coefficients, quantization[0], crop[0] if crop is not None else None)
 
