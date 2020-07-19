@@ -1,13 +1,48 @@
+r"""
+Provides access to low-level JPEG operations using libjpeg.
+By using libjpeg directly, small rounding errors caused by a python reimplementation of the JPEG algorithm are avoided. 
+This package is ideal if that kind of precision is required.
+In addtion to the C++ implemented low-level operations, two python convenience functions are exported that can decode the ressulting coefficients to pixels.
+"""
 import torch
 from torch import Tensor
-from .codec_ops import *
+from ._codec_ops import *
 from torchjpeg.dct import block_idct, deblockify, to_rgb, double_nn_dct
 from torch.nn.functional import interpolate
 from typing import Optional
 
+__all__ = [
+    'read_coefficients',
+    'write_coefficients',
+    'quantize_at_quality',
+    'pixels_for_channel',
+    'reconstruct_full_image'
+]
 
-def pixels_for_channel(channel: Tensor, q: Tensor, crop: Optional[Tensor] = None) -> Tensor:
-    dequantized = channel.float() * q.float()
+
+def pixels_for_channel(channel: Tensor, quantization: Tensor, crop: Optional[Tensor] = None) -> Tensor:
+    r"""
+    Converts a single channel of quantized DCT coefficients into pixels.
+
+    Args
+    ----------
+    channel : torch.Tensor
+        A :math:`\left(1, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor of quantized DCT coefficients. 
+    quantization : torch.Tensor
+        An (8, 8) Tensor of the quantization matrix that was used to quantize :code:`channel`. 
+    crop : torch.Tensor
+        An optional (2) Tensor of containing the `$\left(H, W \right)$` original sizes of the image channel stored in :code:`channel`. The pixel result will be cropped to this size.
+
+    Returns
+    -------
+    torch.Tensor
+        A :math:`\left(H, W \right)` Tensor containing the pixel values of the channel in [0, 1]
+
+    Notes
+    -----
+    This function takes inputs in the same format as returned by :py:func:`read_coefficients` separated into a single channel.
+    """
+    dequantized = channel.float() * quantization.float()
 
     s = block_idct(dequantized) + 128
     s = s.view(1, 1, s.shape[1] * s.shape[2], 8, 8)
@@ -20,7 +55,32 @@ def pixels_for_channel(channel: Tensor, q: Tensor, crop: Optional[Tensor] = None
     return s
 
 
-def reconstruct_full_image(y_coefficients: Tensor, quantization: Tensor, cbcr_coefficients: Optional[Tensor] = None, crop: Optional[Tensor] = None):
+def reconstruct_full_image(y_coefficients: Tensor, quantization: Tensor, cbcr_coefficients: Optional[Tensor] = None, crop: Optional[Tensor] = None) -> Tensor:
+    r"""
+    Converts quantized DCT coefficients into an image.
+
+    Parameters
+    ----------
+    y_coefficients : torch.Tensor
+        A :math:`\left(1, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor of quantized Y channel DCT coefficients.
+    quantization : torch.Tensor
+        A :math:`\left(C, 8, 8 \right)` Tensor of quantization matrices for each channel.
+    cbcr_coefficients : Optional[torch.Tensor]
+        A :math:`\left(2, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor of quantized color channel DCT coeffcients. 
+    crop : Optional[torch.Tensor]
+        A :math:`\left(C, 2 \right)` Tensor containing the :math:`\left(H, W \right)` dimensions of the image that produced the given  DCT coefficients, the pixel result will be cropped to this size.
+
+    Returns
+    -------
+    torch.Tensor
+        A :math:`\left(C, H, W \right)` Tensor containing the image pixels in pytorch format (normalized to [0, 1])
+
+    Notes
+    -----
+    This function is designed to work on the output of py:func:`read_coefficients` and py:func:`quantize_at_quality`. Note that the color channel coefficients
+    will be upsampled by 2 as chroma subsampling is currently assumed. If the image is color, it will be converted from YCbCr to RGB. 
+    
+    """
     y = pixels_for_channel(y_coefficients, quantization[0], crop[0] if crop is not None else None)
 
     if cbcr_coefficients is not None:

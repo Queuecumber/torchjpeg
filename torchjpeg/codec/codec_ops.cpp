@@ -1,4 +1,5 @@
 #include <torch/extension.h>
+#include <pybind11/embed.h>
 
 #include <numeric>
 #include <algorithm>
@@ -307,11 +308,94 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-    m.def("read_coefficients", &read_coefficients, "Read DCT coefficients from the a JPEG file",
+    py::options options;
+	options.disable_function_signatures();
+
+    m.import("torch");
+
+    m.def("read_coefficients", &read_coefficients, R"(
+            read_coefficients(path: str) -> Tuple[Tensor, Tensor, Tensor, Optional[Tensor]]
+
+            Read DCT coefficients from a JPEG file
+
+            Parameters
+            ----------
+            path : str
+                The path to an existing JPEG file
+
+            Returns
+            -------
+            Tensor
+                A :math:`\left(C, 2 \right)` Tensor containing the size of the original image that produced the returned DCT coefficients, this is usually different from the size of the
+                coefficient Tensor because padding is added during the compression process. The format is :math:`\left(H, W \right)`.
+            Tensor
+                A :math:`\left(C, 8, 8 \right)` Tensor containing the quantization matrices for each of the channels. Usually the color channels have the same quantization matrix.
+            Tensor
+                A :math:`\left(1, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor containing the Y channel DCT coefficients for each :math:`8 \times 8` block.
+            Optional[Tensor]
+                A :math:`\left(2, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor containing the Cb and Cr channel DCT coefficients for each :math:`8 \times 8` block, or `None` if the image is grayscale.
+
+            Notes
+            -----
+            The return values from this function are "raw" values, as output by libjpeg with no transformation. In particular, the DCT coefficients are quantized and will need
+            to be dequantized using the returned quantization matrices before they can be converted into displayable image pixels. They will likely also need cropping and the chroma
+            channels, if they exist, will probably be downsampled. The type of all Tensors is :code:`torch.short` except the dimensions (first return value) with are of type :code:`torch.int`.
+          )",
           py::arg("path"));
-    m.def("write_coefficients", &write_coefficients, "Write DCT coefficients to a JPEG file",
+    m.def("write_coefficients", &write_coefficients, R"(
+            write_coefficients(path: str, dimensions: Tensor, quantization: Tensor, Y_coefficients: Tensor, CrCb_coefficients: Optional[Tensor] = None) -> None
+
+            Write DCT coefficients to a JPEG file.
+
+            Parameters
+            ----------
+            path : str
+                The path to the JPEG file to write, will be overwritten
+            dimensions : Tensor
+                A :math:`\left(C, 2 \right)` Tensor containing the size of the original image before taking the DCT. If you padded the image to produce the coefficients, pass the size before padding here.
+            quantization : Tensor
+                A :math:`\left(C, 8, 8 \right)` Tensor containing the quantization matrices that were used to quantize the DCT coefficients.
+            Y_coefficients : Tensor
+                A :math:`\left(1, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor of Y channel DCT coefficients separated into :math:`8 \times 8` blocks.
+            CbCr_coefficients : Optional[Tensor]
+                A :math:`\left(2, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor of Cb and Cr channel DCT coefficients separated into :math:`8 \times 8` blocks.
+
+            Notes
+            -----
+            The parameters passed to this function are in the same "raw" format as returned by :py:func:`read_coefficients`. The DCT coefficients must be appropriately quantized and the color 
+            channel coefficients must be downsampled if desired. The type of the Tensors must be :code:`torch.short` except the :code:`dimensions` parameter which must be :code:`torch.int`.
+          )",
           py::arg("path"), py::arg("dimensions"), py::arg("quantization"), py::arg("Y_coefficients"),
           py::arg("CrCb_coefficients") = std::nullopt);
-    m.def("quantize_at_quality", &quantize_at_quality, "Quantize pixels using libjpeg at the given quality",
+    m.def("quantize_at_quality", &quantize_at_quality, R"(
+            quantize_at_quality(pixels: Tensor, quality: int, baseline: bool = true) -> Tuple[Tensor, Tensor, Tensor, Optional[Tensor]]
+
+            Quantize pixels using libjpeg at the given quality.
+
+            Parameters
+            ----------
+            pixels : Tensor
+                A :math:`\left(C, H, W \right)` Tensor of image pixels in pytorch format (normalized to [0, 1]).
+            quality : int
+                The integer quality level to quantize to, in [0, 100] with 100 being maximum quality and 0 being minimal quality.
+            baseline : bool
+                Use the baseline quantization matrices, e.g. quantization matrix entries cannot be larger than 255. True by default, don't change it unless you know what you're doing.
+
+            Returns
+            -------
+            Tensor
+                A :math:`\left(C, 2 \right)` Tensor containing the size of the original image that produced the returned DCT coefficients, this is usually different from the size of the
+                coefficient Tensor because padding is added during the compression process. The format is :math:`\left(H, W \right)`.
+            Tensor
+                A :math:`\left(C, 8, 8 \right)` Tensor containing the quantization matrices for each of the channels. Usually the color channels have the same quantization matrix.
+            Tensor
+                A :math:`\left(1, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor containing the Y channel DCT coefficients for each :math:`8 \times 8` block.
+            Optional[Tensor]
+                A :math:`\left(2, \frac{H}{8}, \frac{W}{8}, 8, 8 \right)` Tensor containing the Cb and Cr channel DCT coefficients for each :math:`8 \times 8` block, or `None` if the image is grayscale.
+
+            Notes
+            -----
+            The output format of this function is the same as that of :py:func:`read_coefficients`. 
+          )",
           py::arg("pixels"), py::arg("quality"), py::arg("baseline") = true);
 }
