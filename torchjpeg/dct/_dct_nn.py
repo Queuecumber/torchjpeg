@@ -113,6 +113,18 @@ block_halver = torch.einsum('mnzab,ijab,zijrw,rwxy,xypq->mnpq', reblocker, dct, 
 
 
 def double_nn_dct(input_dct: Tensor) -> Tensor:
+    r"""
+    DCT domain nearest neighbor doubling
+
+    The function computes a 2x nearest neighbor upsampling on DCT coefficients without converting them to pixels.
+    It is equivalent to the following procedure: IDCT -> 2x upsampling -> DCT
+
+    Args:
+        input_dct (Tensor): The input DCT coefficients in the format :math:`(N, C, H, W)`
+
+    Returns:
+        Tensor: The coefficients of the resized image, double the height and width of the input.
+    """
     if input_dct.is_cuda:
         dop = block_doubler.cuda()
     else:
@@ -126,6 +138,18 @@ def double_nn_dct(input_dct: Tensor) -> Tensor:
 
 
 def half_nn_dct(input_dct: Tensor) -> Tensor:
+    r"""
+    DCT domain nearest neighbor half-sizing
+
+    The function computes a 2x nearest neighbor downsampling on DCT coefficients without converting them to pixels.
+    It is equivalent to the following procedure: IDCT -> 2x downsampling -> DCT
+
+    Args:
+        input_dct (Tensor): The input DCT coefficients in the format :math:`(N, C, H, W)`
+
+    Returns:
+        Tensor: The coefficients of the resized image, halg the height and width of the input.
+    """
     if input_dct.is_cuda:
         dop = block_halver.cuda()
     else:
