@@ -1,4 +1,4 @@
-from ._dct import blockify, deblockify
+from . import blockify, deblockify
 import torch
 from torch import Tensor
 import math
