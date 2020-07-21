@@ -1,5 +1,3 @@
-image: quay.io/pypa/manylinux1_x86_64
-
 stages:
   - build
   - deploy
@@ -14,17 +12,18 @@ stages:
     - make install
 
 .wheel:
+  image: quay.io/pypa/manylinux1_x86_64
   extends: .libjpeg
   stage: build
   variables: 
     PYBIN: /opt/python/$PYVER/bin
-  image: quay.io/pypa/manylinux2014_x86_64
   script:
     - ${PYBIN}/pip install -r dev-requirements.txt
     - ${PYBIN}/pip wheel . --no-deps -w dist/
     - rename linux manylinux2014 dists/*
   artifacts:
     - dist/*
+  when: manual
   
 wheel-36:
   extends: .wheel
