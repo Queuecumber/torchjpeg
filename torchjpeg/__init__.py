@@ -1,3 +1,5 @@
-import torchjpeg.dct as dct
-import torchjpeg.quantization as quantization
-import torchjpeg.codec as codec
+"""
+torchjpeg
+====================================
+torchjpeg provides an API for accessing low-level JPEG related constructs directly from pytorch.
+"""
