@@ -12,7 +12,6 @@ from torch import Tensor
 from typing import Tuple, Optional
 from torch.nn.functional import pad
 
-from ._dct import *
 from ._nn import double_nn_dct, half_nn_dct
 from ._stats import Stats
 from ._color import *
@@ -286,7 +285,7 @@ def idct(coeff: Tensor) -> Tensor:
     return batch_idct(coeff.unsqueeze(0)).squeeze(0)
 
 
-def normalize(dct: Tensor, stats: DCTStats, type: Optional[str] = None) -> Tensor:
+def normalize(dct: Tensor, stats: Stats, type: Optional[str] = None) -> Tensor:
     r"""
     Normalizes DCT coefficients using pre-computed stats
 
@@ -313,7 +312,7 @@ def normalize(dct: Tensor, stats: DCTStats, type: Optional[str] = None) -> Tenso
     return torch.cat(ch, dim=1)
 
 
-def denormalize(dct: Tensor, stats: DCTStats, type: Optional[str] = None) -> Tensor:
+def denormalize(dct: Tensor, stats: Stats, type: Optional[str] = None) -> Tensor:
     r"""
     Denormalizes DCT coefficients using pre-computed stats
 
@@ -340,7 +339,7 @@ def denormalize(dct: Tensor, stats: DCTStats, type: Optional[str] = None) -> Ten
     return torch.cat(ch, dim=1)
 
 
-def batch_to_images(dct: Tensor, stats: Optional[DCTStats] = None, crop: Optional[Tensor] = None, type: Optional[str] = None) -> Tensor:
+def batch_to_images(dct: Tensor, stats: Optional[Stats] = None, crop: Optional[Tensor] = None, type: Optional[str] = None) -> Tensor:
     r"""
     Converts a batch of DCT coefficients to a batch of images. 
     
@@ -382,7 +381,7 @@ def batch_to_images(dct: Tensor, stats: Optional[DCTStats] = None, crop: Optiona
     return spatial
 
 
-def images_to_batch(spatial: Tensor, stats: Optional[DCTStats] = None, type: Optional[str] = None) -> Tensor:
+def images_to_batch(spatial: Tensor, stats: Optional[Stats] = None, type: Optional[str] = None) -> Tensor:
     r"""
     Converts a batch of images to a batch of DCT coefficients. 
     
