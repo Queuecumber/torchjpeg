@@ -13,7 +13,7 @@ stages:
     - cd ..
 
 .wheel:
-  image: quay.io/pypa/manylinux1_x86_64
+  image: quay.io/pypa/manylinux2014_x86_64
   extends: .libjpeg
   stage: build
   variables: 
