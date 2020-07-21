@@ -1,4 +1,4 @@
-import torch
+import torch.codec
 from torchvision.transforms.functional import to_pil_image, to_tensor
 import torchjpeg
 import math

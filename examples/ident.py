@@ -1,4 +1,4 @@
-import torchjpeg
+import torchjpeg.codec
 import argparse
 
 

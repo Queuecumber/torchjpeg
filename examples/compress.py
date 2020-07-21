@@ -1,4 +1,4 @@
-import torchjpeg
+import torchjpeg.codec
 import argparse
 from PIL import Image
 from torchvision.transforms.functional import to_tensor

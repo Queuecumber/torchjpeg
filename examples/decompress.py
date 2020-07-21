@@ -1,5 +1,5 @@
 import torch
-import torchjpeg
+import torchjpeg.codec
 from torchvision.transforms.functional import to_pil_image
 import math
 import numpy as np
