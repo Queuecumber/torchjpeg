@@ -1,0 +1,64 @@
+image: quay.io/pypa/manylinux1_x86_64
+
+stages:
+  - build
+  - deploy
+
+.libjpeg:
+  before_script:
+    - yum install util-linux
+    - curl http://www.ijg.org/files/jpegsrc.v9d.tar.gz > jpegsrc.tar.gz
+    - tar xvf jpegsrc.tar.gz
+    - cd jpeg-9d
+    - ./configure --enable-static --with-pic
+    - make install
+
+.wheel:
+  extends: .libjpeg
+  stage: build
+  variables: 
+    PYBIN: /opt/python/$PYVER/bin
+  image: quay.io/pypa/manylinux2014_x86_64
+  script:
+    - ${PYBIN}/pip install -r dev-requirements.txt
+    - ${PYBIN}/pip wheel . --no-deps -w dist/
+    - rename linux manylinux2014 dists/*
+  artifacts:
+    - dist/*
+  
+wheel-36:
+  extends: .wheel
+  variables: 
+    PYVER: cp36-cp36m
+    
+wheel-37:
+  extends: .wheel
+  variables: 
+    PYVER: cp37-cp37m
+
+wheel-38:
+  extends: .wheel
+  variables: 
+    PYVER: cp38-cp38
+
+pypi:
+  stage: deploy
+  image: python
+  script:
+    - pip install -r dev-requirements.txt
+    - TWINE_USERNAME=__token__
+    - TWINE_PASSWORD=${pypi_push_key}
+    - twine upload dist/*
+
+pages:
+  extends: .libjpeg
+  stage: deploy
+  image: python
+  script:
+    - python setup.py install
+    - cd doc
+    - pip install requirements.txt
+    - make html
+    - mv build ../public
+  artifacts:
+    - public
