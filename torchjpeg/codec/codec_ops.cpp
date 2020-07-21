@@ -273,7 +273,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
     cinfo.in_color_space = pixels.size(0) > 1 ? JCS_RGB : JCS_GRAYSCALE;
 
     jpeg_set_defaults(&cinfo);
-    jpeg_set_quality(&cinfo, quality, int(baseline));
+    jpeg_set_quality(&cinfo, quality, boolean(baseline));
 
     // No way that I know of to pass planar images to libjpeg
     auto channel_interleaved = (pixels * 255.f).round().to(torch::kByte).transpose(0, 2).transpose(0, 1).contiguous();
