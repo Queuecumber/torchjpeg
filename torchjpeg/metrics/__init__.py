@@ -7,10 +7,12 @@ should be images in [0, 1].
 from ._psnr import *
 from ._psnrb import *
 from ._ssim import *
+from ._size import *
 
 __all__ = [
     'psnr',
     'psnrb',
     'blocking_effect_factor',
-    'ssim'   
+    'ssim',
+    'size'
 ]
