@@ -22,7 +22,8 @@ stages:
     - ${PYBIN}/pip wheel . --no-deps -w dist/
     - rename linux manylinux2014 dists/*
   artifacts:
-    - dist/*
+    paths:
+      - dist/*
   when: manual
   
 wheel-36:
@@ -60,4 +61,5 @@ pages:
     - make html
     - mv build ../public
   artifacts:
-    - public
+    paths:
+      - public
