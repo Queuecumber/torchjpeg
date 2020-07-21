@@ -49,6 +49,7 @@ pypi:
     - TWINE_USERNAME=__token__
     - TWINE_PASSWORD=${pypi_push_key}
     - twine upload dist/*
+  when: manual
 
 pages:
   extends: .libjpeg
@@ -63,3 +64,4 @@ pages:
   artifacts:
     paths:
       - public
+  when: manual
