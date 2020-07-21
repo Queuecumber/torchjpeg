@@ -14,6 +14,10 @@ by libjpeg. The DCT coefficients for the Y channel and CrCb channels are returne
 different sizes. It is up to the user of the library to dequantize, reshape, and otherwise convert them into pixels
 if desired. See `test_decompress.py` for an example of how to do this.
 
+## LIBJPEG
+
+Currently builds against libjpeg-9d
+
 ## Exported Functions
 
 `read_coefficients(path)` - Reads DCT coefficients from the JPEG file at the given path. Return values are
