@@ -4,7 +4,6 @@ stages:
 
 .libjpeg:
   before_script:
-    - yum install util-linux
     - curl http://www.ijg.org/files/jpegsrc.v9d.tar.gz > jpegsrc.tar.gz
     - tar xvf jpegsrc.tar.gz
     - cd jpeg-9d
@@ -19,6 +18,7 @@ stages:
   variables: 
     PYBIN: /opt/python/$PYVER/bin
   script:
+    - yum install util-linux
     - ${PYBIN}/pip install -r dev-requirements.txt
     - ${PYBIN}/pip wheel . --no-deps -w dist/
     - rename linux manylinux2014 dist/*
