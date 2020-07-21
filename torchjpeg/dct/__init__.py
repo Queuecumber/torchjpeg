@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 
-def blockify(im: Tensor, size: Tuple[int, int]) -> Tensor:
+def blockify(im: Tensor, size: int) -> Tensor:
     r"""
     Breaks an image into non-overlapping blocks of equal size.
 
@@ -440,17 +440,43 @@ def pad_to_block_multiple(im: Tensor, macroblock_size: int = 16) -> Tensor:
     return im
 
 
-def zigzag(batch: Tensor) -> Tensor:
+def zigzag(coefficients: Tensor) -> Tensor:
     r"""
-    Vectorizes a batch of DCT coefficients in JPEG zigzag order
+    Vectorizes a DCT coefficients in JPEG zigzag order
 
     Args:
-        batch (Tensor): A batch of coefficients of shape :math:`(N, C, H, W)`
+        coefficients (Tensor): DCT coefficients of shape :math:`(N, C, H, W)` or :math:`(C, H, W)`.
     
     Returns:
-        Tensor: A batch of vectorized coefficients of shape :math:`\left(N, C, \frac{H}{8}, \frac{W}{8}, 64\right)` 
+        Tensor: A batch of vectorized coefficients of shape :math:`(N, C, L, 64)` or :math:`(C, L, 64)`
 
     Note:
         For a visual representation of JPEG zigzag order see https://en.wikipedia.org/wiki/JPEG#/media/File:JPEG_ZigZag.svg.
     """
-    raise NotImplementedError()
+    assert len(coefficients.shape) in (3, 4)
+
+    zigzag_indices = Tensor([
+         0,  1,  5,  6, 14, 15, 27, 28,
+         2,  4,  7, 13, 16, 26, 29, 42,
+         3,  8, 12, 17, 25, 30, 41, 43,
+         9, 11, 18, 24, 31, 40, 44, 53,
+        10, 19, 23, 32, 38, 45, 52, 54,
+        20, 22, 33, 38, 46, 51, 55, 60,
+        21, 34, 36, 47, 50, 56, 59, 61,
+        35, 36, 48, 49, 57, 58, 62, 63 
+    ]).long()
+
+    if len(coefficients.shape) == 3:
+        c = coefficients.unsqueeze(0)
+    else:
+        c = coefficients
+
+    c = blockify(c, 8)
+
+    c = c.view(c.shape[0], c.shape[1], c.shape[2], 64)
+    c[:, :, :, :] = c[:, :, :, zigzag_indices]
+
+    if len(coefficients.shape) == 3:
+        c = c.squeeze(0)
+
+    return c
