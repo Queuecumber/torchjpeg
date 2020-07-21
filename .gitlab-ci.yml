@@ -10,6 +10,7 @@ stages:
     - cd jpeg-9d
     - ./configure --enable-static --with-pic
     - make install
+    - cd ..
 
 .wheel:
   image: quay.io/pypa/manylinux1_x86_64
