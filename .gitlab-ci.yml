@@ -21,7 +21,7 @@ stages:
   script:
     - ${PYBIN}/pip install -r dev-requirements.txt
     - ${PYBIN}/pip wheel . --no-deps -w dist/
-    - rename linux manylinux2014 dists/*
+    - rename linux manylinux2014 dist/*
   artifacts:
     paths:
       - dist/*
