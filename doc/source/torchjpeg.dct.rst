@@ -7,4 +7,3 @@ Module contents
 .. automodule:: torchjpeg.dct
    :members:
    :undoc-members:
-   :show-inheritance:

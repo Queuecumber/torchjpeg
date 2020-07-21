@@ -7,7 +7,7 @@ Subpackages
 .. toctree::
 
    torchjpeg.codec
-   torchjpeg.data
+   torchjpeg.transforms
    torchjpeg.dct
    torchjpeg.metrics
    torchjpeg.quantization

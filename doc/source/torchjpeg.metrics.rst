@@ -7,4 +7,3 @@ Module contents
 .. automodule:: torchjpeg.metrics
    :members:
    :undoc-members:
-   :show-inheritance:
