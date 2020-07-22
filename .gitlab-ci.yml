@@ -47,7 +47,7 @@ pypi:
   image: python
   script:
     - pip install twine
-    - twine -u __token__ -p ${pypi_push_key} upload dist/*
+    - twine upload -u __token__ -p ${pypi_push_key} dist/*
   when: manual
 
 pages:
