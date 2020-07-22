@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 import math
+from . import blockify, deblockify
 
 # box resize, takes and 8 x 8 image and returns a 16 x 16 image
 def double_size_tensor() -> Tensor:

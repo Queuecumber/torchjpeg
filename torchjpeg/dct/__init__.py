@@ -12,32 +12,7 @@ from torch import Tensor
 from typing import Tuple, Optional
 from torch.nn.functional import pad
 
-from ._nn import double_nn_dct, half_nn_dct
 from ._stats import Stats
-from ._color import *
-
-__all__ = [
-    'blockify',
-    'deblockify',
-    'block_dct',
-    'block_idct',
-    'batch_dct',
-    'batch_idct',
-    'dct',
-    'idct',
-    'to_ycbcr',
-    'to_rgb',
-    'normalize',
-    'denormalize',
-    'batch_to_images',
-    'images_to_batch',
-    'double_nn_dct',
-    'half_nn_dct',
-    'Stats',
-    'pad_to_block_multiple',
-    'zigzag',
-]
-
 
 def blockify(im: Tensor, size: int) -> Tensor:
     r"""
@@ -479,3 +454,28 @@ def zigzag(coefficients: Tensor) -> Tensor:
         c = c.squeeze(0)
 
     return c
+
+from ._nn import double_nn_dct, half_nn_dct
+from ._color import to_rgb, to_ycbcr
+
+__all__ = [
+    'blockify',
+    'deblockify',
+    'block_dct',
+    'block_idct',
+    'batch_dct',
+    'batch_idct',
+    'dct',
+    'idct',
+    'to_ycbcr',
+    'to_rgb',
+    'normalize',
+    'denormalize',
+    'batch_to_images',
+    'images_to_batch',
+    'double_nn_dct',
+    'half_nn_dct',
+    'Stats',
+    'pad_to_block_multiple',
+    'zigzag',
+]
