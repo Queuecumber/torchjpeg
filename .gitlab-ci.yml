@@ -59,7 +59,7 @@ pypi-dev:
     - apt-get -y install rename
     - rename "s/\d+\.\d+\.\d+/${CI_MERGE_REQUEST_IID}/" dist/*
     - pip install twine
-    - twine upload -u __token__ -p ${dev_push_key} --repository https://gitlab.com/api/v4/projects/12010850/packages/pypi dist/*
+    - twine upload -u __token__ -p ${dev_push_key} --repository-url https://gitlab.com/api/v4/projects/12010850/packages/pypi dist/*
   rules:
     - if: $CI_MERGE_REQUEST_IID
       when: on_success
@@ -72,7 +72,7 @@ pypi-prerelease:
     - apt-get -y install rename
     - rename "s/\d+\.\d+\.\d+/master/" dist/*
     - pip install twine
-    - twine upload -u __token__ -p ${dev_push_key} --repository https://gitlab.com/api/v4/projects/12010850/packages/pypi dist/*
+    - twine upload -u __token__ -p ${dev_push_key} --repository-url https://gitlab.com/api/v4/projects/12010850/packages/pypi dist/*
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: on_success
