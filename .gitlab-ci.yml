@@ -57,7 +57,7 @@ pages:
     - wheel_38=`ls dist/*38*`
     - pip install ${wheel_38}
     - cd doc
-    - pip install requirements.txt
+    - pip install -r requirements.txt
     - make html
     - mv build ../public
   artifacts:
