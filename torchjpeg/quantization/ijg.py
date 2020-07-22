@@ -5,7 +5,7 @@ import torch
 from typing import Callable
 from torch import Tensor
 from torchjpeg.dct import batch_dct, batch_idct
-from ._quantization import quantize, dequantize
+from . import quantize, dequantize
 
 
 luma_quant_matrix = Tensor([

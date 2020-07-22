@@ -12,7 +12,6 @@ from torch import Tensor
 from torch.nn.functional import upsample
 from torchjpeg.dct import blockify, deblockify
 from typing import Optional, Callable
-from . import ijg
 
 
 def quantize(dct: Tensor, mat: Tensor, round: Callable[[Tensor], Tensor]=torch.round) -> Tensor:
@@ -64,3 +63,5 @@ def dequantize(dct: Tensor, mat: Tensor) -> Tensor:
     dequantized_blocks = dct_blocks * mat
     dequantized = deblockify(dequantized_blocks, (dct.shape[2], dct.shape[3]))
     return dequantized
+
+from . import ijg
