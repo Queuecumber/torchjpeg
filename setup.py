@@ -7,15 +7,20 @@ with open("README.md", "r") as fh:
 setup(name='torchjpeg',
       version='0.9.1',
       author='Max Ehrlich',
-      author_email='max.ehr@gmail.com',
+      project_urls={
+          'Documentation': 'https://queuecumber.gitlab.io/torchjpeg/',
+          'Source': 'https://gitlab.com/Queuecumber/torchjpeg',
+          'Tracker': 'https://gitlab.com/Queuecumber/torchjpeg/issues',
+      },
       description='Utilities for JPEG data access and manipulation in pytorch',
       long_description=long_description,
       long_description_content_type="text/markdown",
-      url='https://gitlab.com/Queuecumber/torchjpeg',
+      url='https://queuecumber.gitlab.io/torchjpeg/',
       classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        "Operating System :: POSIX :: Linux",
+        "Development Status :: 3 - Alpha"
       ],
       python_requires='>=3.6',
       packages=find_packages(),
