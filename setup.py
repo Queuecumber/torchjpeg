@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='torchjpeg',
-      version='0.9.1',
+      version='0.9.2',
       author='Max Ehrlich',
       project_urls={
           'Documentation': 'https://queuecumber.gitlab.io/torchjpeg/',
