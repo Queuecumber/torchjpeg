@@ -48,13 +48,14 @@ pypi:
   script:
     - pip install -r dev-requirements.txt
     - twine -u __token__ -p ${pypi_push_key} upload dist/*
-  when: on_success
+  when: manual
 
 pages:
-  extends: .libjpeg
   stage: deploy
-  image: python
+  image: python:3.8
   script:
+    - wheel_38=`ls dist/*38*`
+    - pip install ${wheel_38}
     - python setup.py install
     - cd doc
     - pip install requirements.txt
@@ -63,4 +64,4 @@ pages:
   artifacts:
     paths:
       - public
-  when: on_success
+  when: manual
