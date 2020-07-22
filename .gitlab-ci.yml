@@ -47,10 +47,8 @@ pypi:
   image: python
   script:
     - pip install -r dev-requirements.txt
-    - TWINE_USERNAME=__token__
-    - TWINE_PASSWORD=${pypi_push_key}
-    - twine upload dist/*
-  when: manual
+    - twine -u __token__ -p ${pypi_push_key} upload dist/*
+  when: on_success
 
 pages:
   extends: .libjpeg
@@ -65,4 +63,4 @@ pages:
   artifacts:
     paths:
       - public
-  when: manual
+  when: on_success
