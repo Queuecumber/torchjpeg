@@ -25,6 +25,8 @@ stages:
   artifacts:
     paths:
       - dist/*
+  rules:
+    - when: always
   
 wheel-36:
   extends: .wheel
