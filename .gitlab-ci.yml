@@ -68,6 +68,7 @@ pypi-dev:
   rules:
     - if: $CI_MERGE_REQUEST_IID
       when: on_success
+  allow_failure: true
 
 pypi-prerelease:
   stage: deploy
