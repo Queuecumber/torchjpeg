@@ -29,6 +29,8 @@ classifiers = [
 
 build = "build.py"
 
+include = ["src/libjpeg/*"]
+
 [tool.poetry.dependencies]
 
 python = ">= 3.6.1, < 3.9"

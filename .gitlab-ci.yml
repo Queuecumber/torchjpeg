@@ -5,14 +5,6 @@ stages:
   - deploy
   - docs
 
-.libjpeg: &libjpeg_build
-  - curl http://www.ijg.org/files/jpegsrc.v9d.tar.gz > jpegsrc.tar.gz
-  - tar xvf jpegsrc.tar.gz
-  - cd jpeg-9d
-  - ./configure --enable-static --with-pic
-  - make install
-  - cd ..
-
  # Code quality
 .cq-base:
   image: python:3.8
@@ -23,7 +15,6 @@ stages:
 lint:
   extends: .cq-base
   script:
-    - *libjpeg_build
     - pip install "poetry==1.0.10"
     - poetry install
     - poetry run pylint torchjpeg
@@ -62,7 +53,6 @@ dco:
 .test-base:
   stage: test
   before_script:
-    - *libjpeg_build
     - pip install "poetry==1.0.10"
     - poetry install
   script:
@@ -93,8 +83,6 @@ test-38:
   stage: build
   variables: 
     PYBIN: /opt/python/$PYVER/bin
-  before_script:
-    - *libjpeg_build
   script:
     - yum install util-linux
     - ${PYBIN}/pip install poetry==1.0.10
