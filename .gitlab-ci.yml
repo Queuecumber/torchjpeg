@@ -1,21 +1,60 @@
 stages:
-  - cq
+  - dependency cache
+  - code quality
   - test
   - build
   - deploy
   - docs
 
+build-venv:
+  image: python:$PYVER
+  stage: dependency cache
+  script:
+    - python -m venv --copies .venv
+    - source .venv/bin/activate
+    - pip install "poetry==1.0.10"
+    - poetry install --no-root
+    - poetry run python build.py
+  parallel:
+    matrix:
+      - matrixvar2: matrixvar2 # Matrix requires two variables
+        PYVER: ["3.6", "3.7", "3.8"]
+  cache:
+    key: 
+      files: 
+        - poetry.lock
+        - src/libjpeg/jversion.h
+      prefix: ${PYVER}
+    paths: 
+      - .venv/
+      - src/libjpeg
+  rules:
+    - when: always
+
  # Code quality
 .cq-base:
   image: python:3.8
-  stage: cq
+  stage: code quality
+  before_script:
+    - source .venv/bin/activate  
+  needs: 
+    - build-venv
+  cache:
+    key: 
+      files: 
+        - poetry.lock
+        - src/libjpeg/jversion.h
+      prefix: "3.8"
+    paths: 
+      - .venv/
+      - src/libjpeg
+    policy: pull
   rules:
     - when: always
 
 lint:
   extends: .cq-base
   script:
-    - pip install "poetry==1.0.10"
     - poetry install
     - poetry run pylint torchjpeg
     - poetry run pylint test
@@ -25,64 +64,73 @@ lint:
 type-check:
   extends: .cq-base
   script:
-    - pip install "mypy==0.782"
-    - mypy src/torchjpeg
-    - mypy test
-    - mypy examples
-    - mypy ./*.py
+    - poetry run mypy src/torchjpeg
+    - poetry run mypy test
+    - poetry run mypy examples
+    - poetry run mypy ./*.py
 
 imports-sorted:
   extends: .cq-base
   script:
-    - pip install "isort==5.2.2"
-    - isort . --check
+    - poetry run isort . --check --recursive
 
 style:
   extends: .cq-base
   script:
-    - pip install "black==19.10b0"
-    - black . --check
+    - poetry run black . --check
 
 dco:
   extends: .cq-base
   script:
-    - pip install "invoke==1.4.1" "colorama==0.4.3"
-    - invoke dco
+    - poetry run invoke dco
 
 # Tests
-.test-base:
+test:
+  image: python:$PYVER
   stage: test
+  parallel:
+    matrix:
+      - matrixvar2: matrixvar2 # Matrix requires two variables
+        PYVER: ["3.6", "3.7", "3.8"]
   before_script:
-    - pip install "poetry==1.0.10"
+    - source .venv/bin/activate
     - poetry install
   script:
-    - poetry run pytest test/import 
-    - poetry run pytest test/unit
+    - poetry run pytest test/import --junitxml=import.xml --cov-report xml
+    - poetry run pytest test/unit --junitxml=unit.xml --cov-report xml
     #- poetry run pytest test/e2e
-  rules:
-    - when: on_success
   artifacts:
     reports:
       cobertura: coverage.xml
-
-test-36:
-  extends: .test-base
-  image: python:3.6
-
-test-37:
-  extends: .test-base
-  image: python:3.7
-
-test-38:
-  extends: .test-base
-  image: python:3.8
+      junit:
+        - import.xml
+        - unit.xml
+  needs: 
+    - build-venv
+  cache:
+    key: 
+      files: 
+        - poetry.lock
+        - src/libjpeg/jversion.h
+      prefix: ${PYVER}
+    paths: 
+      - .venv/
+      - src/libjpeg
+    policy: pull
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+  rules:
+    - when: always
 
 # Build wheels
-.build-base:
+build-wheel:
   image: quay.io/pypa/manylinux2014_x86_64
   stage: build
   variables: 
     PYBIN: /opt/python/$PYVER/bin
+  parallel:
+    matrix:
+      - matrixvar2: matrixvar2 # Matrix requires two variables
+        PYVER: [cp36-cp36m, cp37-cp37m, cp38-cp38]
   script:
     - yum install util-linux
     - ${PYBIN}/pip install poetry==1.0.10
@@ -90,32 +138,19 @@ test-38:
     - ${PYBIN}/poetry version $(${PYBIN}/poetry run python version.py)
     - ${PYBIN}/poetry build
     - rename linux manylinux2014 dist/*
+  needs: []
+  dependencies: []
   artifacts:
     paths:
-      - dist/*
+      - dist/
       - pyproject.toml
   rules:
-    - when: on_success
+    - when: always
   
-wheel-36:
-  extends: .build-base
-  variables: 
-    PYVER: cp36-cp36m
-    
-wheel-37:
-  extends: .build-base
-  variables: 
-    PYVER: cp37-cp37m
-
-wheel-38:
-  extends: .build-base
-  variables: 
-    PYVER: cp38-cp38
-
 # Deploy wheels
 pypi:
   stage: deploy
-  image: python
+  image: python-slim
   script:
     - pip install "poetry==1.0.10"
     - poetry publish --username __token__ --password ${pypi_push_key}
@@ -123,7 +158,9 @@ pypi:
     - if: '$CI_COMMIT_TAG'
       when: on_success
     - if: '$BUILD_OFFICIAL'
-      when: on_success    
+      when: on_success
+  dependencies:
+    - build-wheel
 
 pages:
   stage: docs
@@ -141,3 +178,5 @@ pages:
   rules:
     - if: '$CI_COMMIT_TAG'
       when: on_success
+  dependencies:
+    - build-wheel

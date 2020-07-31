@@ -94,7 +94,7 @@ generated-members = "numpy.*,torch.*"
 
 [tool.pytest.ini_options]
 
-addopts = "--cov=torchjpeg --cov-report xml --cov-report term --cov-append"
+addopts = "--cov=torchjpeg --cov-report term --cov-append"
 
 # TODO mypy: https://github.com/python/mypy/pull/5208
 
