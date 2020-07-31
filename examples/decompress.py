@@ -1,17 +1,12 @@
-import torch
-import torchjpeg.codec
-from torchvision.transforms.functional import to_pil_image
-import math
-import numpy as np
-from PIL import Image
 import argparse
 
+from torchvision.transforms.functional import to_pil_image
 
-parser = argparse.ArgumentParser(
-    'Tests the pytorch DCT loader by using it along with a custom DCT routine to decompress a JPEG'
-)
-parser.add_argument('input', help='Input image, must be a JPEG')
-parser.add_argument('output', help='Output image, should be lossless for best results')
+import torchjpeg.codec
+
+parser = argparse.ArgumentParser("Tests the pytorch DCT loader by using it along with a custom DCT routine to decompress a JPEG")
+parser.add_argument("input", help="Input image, must be a JPEG")
+parser.add_argument("output", help="Output image, should be lossless for best results")
 args = parser.parse_args()
 
 dimensions, quantization, Y_coefficients, CbCr_coefficients = torchjpeg.codec.read_coefficients(args.input)

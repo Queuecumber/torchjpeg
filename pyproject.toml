@@ -1,0 +1,108 @@
+[tool.poetry]
+
+name = "torchjpeg"
+version = "0.0.0" # This is a placeholder, version is set by the CI during build
+description = "Utilities for JPEG data access and manipulation in pytorch"
+authors = [
+    "Max Ehrlich"
+]
+
+license = "MIT"
+readme = "README.md"
+
+homepage = "https://queuecumber.gitlab.io/torchjpeg"
+repository = "https://gitlab.com/Queuecumber/torchjpeg"
+documentation = "https://queuecumber.gitlab.io/torchjpeg"
+
+
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: C++",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Development Status :: 3 - Alpha"
+]
+
+build = "build.py"
+
+[tool.poetry.dependencies]
+
+python = ">= 3.6.1, < 3.9"
+
+torch = "1.5.1"
+torchvision = "0.6.1"
+Pillow = ">=7.2.0"
+
+[tool.poetry.dev-dependencies]
+
+dunamai = "^1.3.0"
+
+invoke = "^1.4.1"
+colorama = "^0.4.3"
+
+black = { version = "^19.10b0", python = ">=3.6 <3.9" }
+isort = "*"
+
+mypy = "*"
+pylint = "2.5.3"
+
+# TODO docs
+pydocstyle = "*"
+
+pytest = "^6.0.0"
+
+coverage = "^5.2.1"
+pytest-cov = "^2.10.0"
+
+[tool.black]
+
+line-length = 1000
+target-version = ["py36", "py37", "py38"]
+
+[tool.pylint.master]
+
+init-hook='import sys; sys.path.append("src")'
+
+unsafe-load-any-extension = true
+
+[tool.pylint.messages_control]
+
+# line-too-ling: I don't beleive in line length limits
+# trailing-whitespace: triggers on docstrings which is unimportant (black probably fixes this for code)
+# invalid-name: often use names from equations which can be considered invalid
+# mising-module-docstring: many modules have a single function which contains a docstring
+# wrong-import-order: isort takes care of this
+# not-callable: https://github.com/pytorch/pytorch/pull/25093
+disable = """,
+    line-too-long,
+    trailing-whitespace,
+    invalid-name,
+    missing-module-docstring,
+    wrong-import-order,
+    not-callable,
+    """
+
+[tool.pylint.typecheck]
+
+generated-members = "numpy.*,torch.*"
+
+[tool.pytest.ini_options]
+
+addopts = "--cov=torchjpeg --cov-report xml --cov-report term --cov-append"
+
+# TODO mypy: https://github.com/python/mypy/pull/5208
+
+[tool.isort]
+
+profile = "black"
+
+[build-system]
+
+requires = [
+    "poetry>=1.0.10"
+]
+build-backend = "poetry.masonry.api"

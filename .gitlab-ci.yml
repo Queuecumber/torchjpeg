@@ -1,90 +1,144 @@
-include:
-  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
-  
 stages:
+  - cq
+  - test
   - build
   - deploy
+  - docs
 
-.libjpeg:
+.libjpeg: &libjpeg_build
+  - curl http://www.ijg.org/files/jpegsrc.v9d.tar.gz > jpegsrc.tar.gz
+  - tar xvf jpegsrc.tar.gz
+  - cd jpeg-9d
+  - ./configure --enable-static --with-pic
+  - make install
+  - cd ..
+
+ # Code quality
+.cq-base:
+  image: python:3.8
+  stage: cq
+  rules:
+    - when: always
+
+lint:
+  extends: .cq-base
+  script:
+    - *libjpeg_build
+    - pip install "poetry==1.0.10"
+    - poetry install
+    - poetry run pylint torchjpeg
+    - poetry run pylint test
+    - poetry run pylint examples
+    - poetry run pylint ./*.py
+
+type-check:
+  extends: .cq-base
+  script:
+    - pip install "mypy==0.782"
+    - mypy src/torchjpeg
+    - mypy test
+    - mypy examples
+    - mypy ./*.py
+
+imports-sorted:
+  extends: .cq-base
+  script:
+    - pip install "isort==5.2.2"
+    - isort . --check
+
+style:
+  extends: .cq-base
+  script:
+    - pip install "black==19.10b0"
+    - black . --check
+
+dco:
+  extends: .cq-base
+  script:
+    - pip install "invoke==1.4.1" "colorama==0.4.3"
+    - invoke dco
+
+# Tests
+.test-base:
+  stage: test
   before_script:
-    - curl http://www.ijg.org/files/jpegsrc.v9d.tar.gz > jpegsrc.tar.gz
-    - tar xvf jpegsrc.tar.gz
-    - cd jpeg-9d
-    - ./configure --enable-static --with-pic
-    - make install
-    - cd ..
+    - *libjpeg_build
+    - pip install "poetry==1.0.10"
+    - poetry install
+  script:
+    - poetry run pytest test/import 
+    - poetry run pytest test/unit
+    #- poetry run pytest test/e2e
+  rules:
+    - when: on_success
+  artifacts:
+    reports:
+      cobertura: coverage.xml
 
-.wheel:
+test-36:
+  extends: .test-base
+  image: python:3.6
+
+test-37:
+  extends: .test-base
+  image: python:3.7
+
+test-38:
+  extends: .test-base
+  image: python:3.8
+
+# Build wheels
+.build-base:
   image: quay.io/pypa/manylinux2014_x86_64
-  extends: .libjpeg
   stage: build
   variables: 
     PYBIN: /opt/python/$PYVER/bin
+  before_script:
+    - *libjpeg_build
   script:
     - yum install util-linux
-    - ${PYBIN}/pip install -r dev-requirements.txt
-    - ${PYBIN}/pip wheel . --no-deps -w dist/
+    - ${PYBIN}/pip install poetry==1.0.10
+    - ${PYBIN}/poetry run pip install "dunamai==1.3.0" "torch==1.5.1"
+    - ${PYBIN}/poetry version $(${PYBIN}/poetry run python version.py)
+    - ${PYBIN}/poetry build
     - rename linux manylinux2014 dist/*
   artifacts:
     paths:
       - dist/*
+      - pyproject.toml
   rules:
-    - when: always
+    - when: on_success
   
 wheel-36:
-  extends: .wheel
+  extends: .build-base
   variables: 
     PYVER: cp36-cp36m
     
 wheel-37:
-  extends: .wheel
+  extends: .build-base
   variables: 
     PYVER: cp37-cp37m
 
 wheel-38:
-  extends: .wheel
+  extends: .build-base
   variables: 
     PYVER: cp38-cp38
 
+# Deploy wheels
 pypi:
   stage: deploy
   image: python
   script:
-    - pip install twine
-    - twine upload -u __token__ -p ${pypi_push_key} dist/*
+    - pip install "poetry==1.0.10"
+    - poetry publish --username __token__ --password ${pypi_push_key}
   rules:
     - if: '$CI_COMMIT_TAG'
       when: on_success
-
-pypi-dev:
-  stage: deploy
-  image: python
-  script:
-    - apt-get -y update
-    - apt-get -y install rename
-    - rename "s/\d+\.\d+\.\d+/${CI_MERGE_REQUEST_IID}/" dist/*
-    - pip install twine
-    - twine upload -u __token__ -p ${dev_push_key} --repository-url https://gitlab.com/api/v4/projects/12010850/packages/pypi dist/*
-  rules:
-    - if: $CI_MERGE_REQUEST_IID
-      when: on_success
-  allow_failure: true
-
-pypi-prerelease:
-  stage: deploy
-  image: python
-  script:
-    - apt-get -y update
-    - apt-get -y install rename
-    - rename "s/\d+\.\d+\.\d+/master/" dist/*
-    - pip install twine
-    - twine upload -u __token__ -p ${dev_push_key} --repository-url https://gitlab.com/api/v4/projects/12010850/packages/pypi dist/*
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      when: on_success
+    - if: '$BUILD_OFFICIAL'
+      when: on_success    
 
 pages:
-  stage: deploy
+  stage: docs
   image: python:3.8
   script:
     - wheel_38=`ls dist/*38*`

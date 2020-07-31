@@ -1,18 +1,14 @@
-import torch.codec
-from torchvision.transforms.functional import to_pil_image, to_tensor
-import torchjpeg
-import math
-import numpy as np
-from PIL import Image
 import argparse
 
+from PIL import Image
+from torchvision.transforms.functional import to_pil_image, to_tensor
 
-parser = argparse.ArgumentParser(
-    'Tests the pytorch DCT quantizer by quantizing an input image'
-)
-parser.add_argument('input', help='Input image, should be lossless for best results')
-parser.add_argument('output', help='Output image, should be lossless for best results')
-parser.add_argument('quality', type=int, help='Output quality on the 0-100 scale')
+import torchjpeg.codec
+
+parser = argparse.ArgumentParser("Tests the pytorch DCT quantizer by quantizing an input image")
+parser.add_argument("input", help="Input image, should be lossless for best results")
+parser.add_argument("output", help="Output image, should be lossless for best results")
+parser.add_argument("quality", type=int, help="Output quality on the 0-100 scale")
 args = parser.parse_args()
 
 im = Image.open(args.input)
