@@ -150,7 +150,7 @@ build-wheel:
 # Deploy wheels
 pypi:
   stage: deploy
-  image: python-slim
+  image: python:3.8
   script:
     - pip install "poetry==1.0.10"
     - poetry publish --username __token__ --password ${pypi_push_key}
