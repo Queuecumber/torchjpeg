@@ -1,9 +1,9 @@
 torchjpeg.transforms
-======================
+====================
 
 Transforms
 ----------
 
-.. automodule:: torchjpeg.data.transforms
+.. automodule:: torchjpeg.transforms
    :members:
    :undoc-members:

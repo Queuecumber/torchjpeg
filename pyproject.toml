@@ -47,13 +47,16 @@ invoke = "^1.4.1"
 colorama = "^0.4.3"
 
 black = { version = "^19.10b0", python = ">=3.6 <3.9" }
-isort = "*"
+isort = ">=4.2.5,<5" # stuck at 4.x until https://github.com/PyCQA/pylint/pull/3725
 
-mypy = "*"
+mypy = "^0.782"
 pylint = "2.5.3"
 
-# TODO docs
-pydocstyle = "*"
+sphinx = ">=2,<3"
+pydocstyle = "^5.0.2"
+sphinx-book-theme = "^0.0.34"
+"sphinxcontrib.katex" = "^0.6.1"
+myst-parser = "^0.9.1"
 
 pytest = "^6.0.0"
 

@@ -1,16 +1,16 @@
 torchjpeg.quantization
 ======================
 
-Quantization
-------------
+General Quantization
+--------------------
 
 .. automodule:: torchjpeg.quantization
    :members:
    :undoc-members:
    :show-inheritance:
 
-IJG Compatible Quantization
----------------------------
+IJG (libjpeg) Compatible Quantization
+-------------------------------------
 
 .. automodule:: torchjpeg.quantization.ijg
    :members:

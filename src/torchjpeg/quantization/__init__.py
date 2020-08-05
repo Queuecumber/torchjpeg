@@ -80,4 +80,4 @@ def dequantize_multichannel(y: Tensor, cb: Tensor, cr: Tensor, mat: Tensor) -> T
     return coefficients
 
 
-__all__ = ["quantize", "dequantize"]
+__all__ = ["quantize", "dequantize", "quantize_multichannel", "dequantize_multichannel"]

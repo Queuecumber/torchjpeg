@@ -1,5 +1,10 @@
 # TorchJPEG
 
+[![pipeline status](https://gitlab.com/Queuecumber/torchjpeg/badges/master/pipeline.svg)](https://gitlab.com/Queuecumber/torchjpeg/-/pipelines/latest)
+[![coverage report](https://gitlab.com/Queuecumber/torchjpeg/badges/master/coverage.svg)](https://gitlab.com/Queuecumber/torchjpeg/-/pipelines/latest)
+[![PyPI](https://img.shields.io/pypi/v/torchjpeg)](https://pypi.org/project/torchjpeg/)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://gitlab.com/Queuecumber/torchjpeg/-/blob/master/LICENSE)
+
 This package contains a C++ extension for pytorch that interfaces with libjpeg to allow for manipulation of low-level JPEG data.
 By using libjpeg, quantization results are guaranteed to be consistent with other applications, like image viewers or MATLAB,
 which use libjpeg to compress and decompress images. This is useful because JPEG images can be effected by round-off
@@ -12,15 +17,12 @@ transformations.
 
 ## LIBJPEG
 
-Currently builds against: `libjpeg-9d`. libjpeg is statically linked during the build process. See http://www.ijg.org/files/ for libjpeg source.
-
-## Documentation
-
-See https://queuecumber.gitlab.io/torchjpeg/ 
+Currently builds against: `libjpeg-9d`. libjpeg is statically linked during the build process. See [http://www.ijg.org/files/](http://www.ijg.org/files/) for libjpeg source. 
+The full libjpeg source is included with the torchjpeg source code and will be built during the install process (for a source or sdist install).
 
 ## Install
 
-Install using pip, note that only Linux builds are supported at the moment. 
+Packages are hosted on [pypi](https://pypi.org/project/torchjpeg/). Install using pip, note that only Linux builds are supported at the moment. 
 
 ```
 pip install torchjpeg
@@ -30,3 +32,8 @@ If there is demand for builds on other platforms it may happen in the future. Al
 which means it should work on modern Linux systems, however, because of they way pytorch works, we can't actually build it using all of the manylinux2014
 tools. So compliance is not guaranteed and YMMV.
 
+```{warning}
+torchjpeg is currently in pre-beta development and consists mostly of converted research code. The public facing API, including any and all names of
+parameters and functions, is subject to change at any time. We follow semver for versioning and will adhere to that before making and breaking
+changes.
+```

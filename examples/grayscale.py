@@ -1,6 +1,6 @@
 import argparse
 
-import torchjpeg
+import torchjpeg.codec
 
 parser = argparse.ArgumentParser("Losslessly converts a JPEG to grayscale by dropping the Cb and Cr channels without requantizing")
 parser.add_argument("input", help="Input image, must be a JPEG")
