@@ -4,7 +4,6 @@ stages:
   - test
   - build
   - deploy
-  - docs
 
 build-venv:
   image: python:$PYVER
@@ -146,8 +145,35 @@ build-wheel:
       - pyproject.toml
   rules:
     - when: always
+
+build-docs:
+  image: python:3.8
+  stage: build
+  before_script:
+    - source .venv/bin/activate
+    - poetry install
+  script:
+    - cd doc
+    - make html
+  artifacts:
+    paths:
+      - doc/build/html
+  cache:
+    key: 
+      files: 
+        - poetry.lock
+        - src/libjpeg/jversion.h
+      prefix: "3.8"
+    paths: 
+      - .venv/
+      - src/libjpeg
+    policy: pull
+  needs: 
+    - build-venv
+  rules:
+    - when: always
   
-# Deploy wheels
+# Deploy
 pypi:
   stage: deploy
   image: python:3.8
@@ -159,24 +185,20 @@ pypi:
       when: on_success
     - if: '$BUILD_OFFICIAL'
       when: on_success
-  dependencies:
+  needs:
     - build-wheel
 
 pages:
-  stage: docs
+  stage: deploy
   image: python:3.8
-  script:
-    - wheel_38=`ls dist/*38*`
-    - pip install ${wheel_38}
-    - cd doc
-    - pip install -r requirements.txt
-    - make html
-    - mv build/html ../public
+  script: 
+    - mv doc/build/html public
   artifacts:
     paths:
       - public
+  needs:
+    - build-docs
   rules:
     - if: '$CI_COMMIT_TAG'
       when: on_success
-  dependencies:
-    - build-wheel
+  
