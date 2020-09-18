@@ -11,7 +11,6 @@ from ._quantize import dequantize, quantize
 # Don't mess with matrix formatting
 # fmt: off
 luma_quant_matrix = torch.tensor([
-    # pylint: disable=bad-continuation,bad-whitespace
     16,  11,  10,  16,  24,  40,  51,  61,
     12,  12,  14,  19,  26,  58,  60,  55,
     14,  13,  16,  24,  40,  57,  69,  56,
@@ -26,7 +25,6 @@ luma_quant_matrix = torch.tensor([
 # Don't mess with matrix formatting
 # fmt: off
 chroma_quant_matrix = torch.tensor([
-    # pylint: disable=bad-continuation,bad-whitespace
     17,  18,  24,  47,  99,  99,  99,  99,
     18,  21,  26,  66,  99,  99,  99,  99,
     24,  26,  56,  99,  99,  99,  99,  99,

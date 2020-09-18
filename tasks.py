@@ -40,7 +40,7 @@ def type_checking(c, which="all"):
 @task
 def sort_imports(c):
     print(f"{Fore.BLUE}Sorting Imports{Style.RESET_ALL}")
-    c.run("isort . --recursive", warn=True)
+    c.run("isort .", warn=True)
 
 
 @task

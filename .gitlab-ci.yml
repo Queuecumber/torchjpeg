@@ -72,7 +72,7 @@ type-check:
 imports-sorted:
   extends: .cq-base
   script:
-    - poetry run isort . --check --recursive
+    - poetry run isort . --check
 
 style:
   extends: .cq-base

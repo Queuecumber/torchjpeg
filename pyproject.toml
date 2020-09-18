@@ -35,8 +35,8 @@ include = ["src/libjpeg/*"]
 
 python = ">= 3.6.1, < 3.9"
 
-torch = "1.5.1"
-torchvision = "0.6.1"
+torch = "1.6.0"
+torchvision = "0.7.0"
 Pillow = ">=7.2.0"
 
 [tool.poetry.dev-dependencies]
@@ -47,10 +47,10 @@ invoke = "^1.4.1"
 colorama = "^0.4.3"
 
 black = { version = "^19.10b0", python = ">=3.6 <3.9" }
-isort = ">=4.2.5,<5" # stuck at 4.x until https://github.com/PyCQA/pylint/pull/3725
+isort = "^5.5.2"
 
 mypy = "^0.782"
-pylint = "2.5.3"
+pylint = "2.6.0"
 
 sphinx = ">=2,<3"
 pydocstyle = "^5.0.2"
@@ -109,6 +109,6 @@ profile = "black"
 
 requires = [
     "poetry>=1.0.10",
-    "torch==1.5.1",
+    "torch==1.6.0",
 ]
 build-backend = "poetry.masonry.api"

@@ -370,7 +370,6 @@ def zigzag(coefficients: Tensor) -> Tensor:
     # Don't mess with matrix formatting
     # fmt: off
     zigzag_indices = torch.tensor([
-        # pylint: disable=bad-continuation,bad-whitespace
          0,  1,  5,  6, 14, 15, 27, 28,
          2,  4,  7, 13, 16, 26, 29, 42,
          3,  8, 12, 17, 25, 30, 41, 43,
