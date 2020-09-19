@@ -8,12 +8,19 @@ stages:
 build-venv:
   image: python:$PYVER
   stage: dependency cache
+  variables:
+    CC: ccache gcc
+    CCACHE_DIR: $CI_PROJECT_DIR/.ccache
   script:
+    - apt-get update
+    - apt-get install -y ccache
+    - ccache -z
     - python -m venv --copies .venv
     - source .venv/bin/activate
     - pip install "poetry==1.0.10"
     - poetry install --no-root
     - poetry run python build.py
+    - ccache -s
   parallel:
     matrix:
       - matrixvar2: matrixvar2 # Matrix requires two variables
@@ -27,6 +34,7 @@ build-venv:
     paths: 
       - .venv/
       - src/libjpeg
+      - $CI_PROJECT_DIR/.ccache
   rules:
     - when: always
 
