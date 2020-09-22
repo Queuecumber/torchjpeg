@@ -37,3 +37,9 @@ torchjpeg is currently in pre-beta development and consists mostly of converted 
 parameters and functions, is subject to change at any time. We follow semver for versioning and will adhere to that before making and breaking
 changes.
 ```
+
+## Citation
+
+If you use our code in a publication, we ask that you cite the following paper ([bibtex](http://maxehr.umiacs.io/bibtex/ehrlich2020quantization.txt)):
+
+> Max Ehrlich, Larry Davis, Ser-Nam Lim, and Abhinav Shrivastava. "Quantization Guided JPEG Artifact Correction." In Proceedings of the European Conference on Computer Vision, 2020
