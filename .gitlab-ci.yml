@@ -23,8 +23,7 @@ build-venv:
     - ccache -s
   parallel:
     matrix:
-      - matrixvar2: matrixvar2 # Matrix requires two variables
-        PYVER: ["3.6", "3.7", "3.8"]
+      - PYVER: ["3.6", "3.7", "3.8"]
   cache:
     key: 
       files: 
@@ -97,8 +96,7 @@ test:
   stage: test
   parallel:
     matrix:
-      - matrixvar2: matrixvar2 # Matrix requires two variables
-        PYVER: ["3.6", "3.7", "3.8"]
+      - PYVER: ["3.6", "3.7", "3.8"]
   before_script:
     - source .venv/bin/activate
     - poetry install
@@ -136,8 +134,7 @@ build-wheel:
     PYBIN: /opt/python/$PYVER/bin
   parallel:
     matrix:
-      - matrixvar2: matrixvar2 # Matrix requires two variables
-        PYVER: [cp36-cp36m, cp37-cp37m, cp38-cp38]
+      - PYVER: [cp36-cp36m, cp37-cp37m, cp38-cp38]
   script:
     - yum install util-linux
     - ${PYBIN}/pip install poetry==1.0.10
