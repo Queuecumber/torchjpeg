@@ -85,6 +85,5 @@ def psnrb(image: Tensor, target: Tensor) -> Tensor:
         mse = mse.view(mse.shape[0], -1).mean(1)
         return 10 * torch.log10(1 / (mse + bef))
 
-    total = torch.stack([channel_psnrb(image[: c : c + 1, ...], target[:, c : c + 1, ...]) for c in range(image.shape[1])]).sum(0)
-
+    total = torch.stack([channel_psnrb(image[:, c : c + 1, ...], target[:, c : c + 1, ...]) for c in range(image.shape[1])]).sum(0)
     return total / image.shape[1]

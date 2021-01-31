@@ -43,5 +43,4 @@ def ssim(image: Tensor, target: Tensor) -> Tensor:
         [1] Wang, Zhou, et al. "Image quality assessment: from error visibility to structural similarity." IEEE transactions on image processing 13.4 (2004): 600-612.
     """
     total = torch.stack([ssim_single(image[:, c : c + 1, :, :], target[:, c : c + 1, :, :]) for c in range(target.shape[1])]).sum(0)
-
     return total / target.shape[1]
