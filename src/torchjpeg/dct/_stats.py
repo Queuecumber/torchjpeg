@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Union
 
 import torch
 from torch import Tensor
@@ -18,8 +19,11 @@ class Stats:
         normtype (str): Either "ms" for mean-variance normalization or "01" for zero-one normalization.
     """
 
-    def __init__(self, root: Path, normtype: str = "ms") -> None:
+    def __init__(self, root: Union[str, Path], normtype: str = "ms") -> None:
         self.type = normtype
+
+        if isinstance(root, str):
+            root = Path(root)
 
         stats = torch.load(root.open("rb"))
 

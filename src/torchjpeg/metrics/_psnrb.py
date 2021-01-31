@@ -77,12 +77,14 @@ def psnrb(image: Tensor, target: Tensor) -> Tensor:
 
         [1] Tadala, Trinadh, and Sri E. Venkata Narayana. "A Novel PSNR-B Approach for Evaluating the Quality of De-blocked Images." (2012).
     """
-    total = torch.zeros(image.shape[1])
-    for c in range(image.shape[1]):
-        mse = torch.nn.functional.mse_loss(image[:, c : c + 1, :, :], target[:, c : c + 1, :, :], reduction="none")
-        bef = blocking_effect_factor(image[:, c : c + 1, :, :])
+
+    def channel_psnrb(image, target):
+        mse = torch.nn.functional.mse_loss(image, target, reduction="none")
+        bef = blocking_effect_factor(image)
 
         mse = mse.view(mse.shape[0], -1).mean(1)
-        total += 10 * torch.log10(1 / (mse + bef))
+        return 10 * torch.log10(1 / (mse + bef))
+
+    total = torch.stack([channel_psnrb(image[: c : c + 1, ...], target[:, c : c + 1, ...]) for c in range(image.shape[1])]).sum(0)
 
     return total / image.shape[1]
