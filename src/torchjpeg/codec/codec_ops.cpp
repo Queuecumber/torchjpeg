@@ -8,6 +8,29 @@
 
 #include <jpeglib.h>
 
+class libjpeg_exception : public std::exception
+{
+private:
+    char *error;
+
+public:
+    libjpeg_exception(j_common_ptr cinfo)
+    {
+        error = new char[JMSG_LENGTH_MAX];
+        (cinfo->err->format_message)(cinfo, error);
+    }
+
+    virtual const char *what() const throw()
+    {
+        return error;
+    }
+};
+
+void raise_libjpeg(j_common_ptr cinfo)
+{
+    throw libjpeg_exception(cinfo);
+}
+
 long jdiv_round_up(long a, long b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */
 /* Assumes a >= 0, b > 0 */
@@ -20,12 +43,15 @@ void extract_channel(const jpeg_decompress_struct &srcinfo,
                      int compNum,
                      torch::Tensor coefficients,
                      torch::Tensor quantization,
-                     int &coefficients_written) {
-    for (JDIMENSION rowNum = 0; rowNum < srcinfo.comp_info[compNum].height_in_blocks; rowNum++) {
-        JBLOCKARRAY rowPtrs = srcinfo.mem->access_virt_barray((j_common_ptr) &srcinfo, src_coef_arrays[compNum],
+                     int &coefficients_written)
+{
+    for (JDIMENSION rowNum = 0; rowNum < srcinfo.comp_info[compNum].height_in_blocks; rowNum++)
+    {
+        JBLOCKARRAY rowPtrs = srcinfo.mem->access_virt_barray((j_common_ptr)&srcinfo, src_coef_arrays[compNum],
                                                               rowNum, 1, FALSE);
 
-        for (JDIMENSION blockNum = 0; blockNum < srcinfo.comp_info[compNum].width_in_blocks; blockNum++) {
+        for (JDIMENSION blockNum = 0; blockNum < srcinfo.comp_info[compNum].width_in_blocks; blockNum++)
+        {
             std::copy_n(rowPtrs[0][blockNum], DCTSIZE2, coefficients.data_ptr<int16_t>() + coefficients_written);
             coefficients_written += DCTSIZE2;
         }
@@ -35,13 +61,15 @@ void extract_channel(const jpeg_decompress_struct &srcinfo,
                 quantization.data_ptr<int16_t>() + DCTSIZE2 * compNum);
 }
 
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> read_coefficients_using(jpeg_decompress_struct &srcinfo) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> read_coefficients_using(jpeg_decompress_struct &srcinfo)
+{
     jpeg_read_header(&srcinfo, TRUE);
 
     // channels x 2
     auto dimensions = torch::empty({srcinfo.num_components, 2}, torch::kInt);
     auto dct_dim_a = dimensions.accessor<int, 2>();
-    for (auto i = 0; i < srcinfo.num_components; i++) {
+    for (auto i = 0; i < srcinfo.num_components; i++)
+    {
         dct_dim_a[i][0] = srcinfo.comp_info[i].downsampled_height;
         dct_dim_a[i][1] = srcinfo.comp_info[i].downsampled_width;
     }
@@ -53,8 +81,8 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
                                         srcinfo.comp_info[0].height_in_blocks,
                                         srcinfo.comp_info[0].width_in_blocks,
                                         DCTSIZE,
-                                        DCTSIZE
-                                       }, torch::kShort);
+                                        DCTSIZE},
+                                       torch::kShort);
 
     auto quantization = torch::empty({srcinfo.num_components, DCTSIZE, DCTSIZE}, torch::kShort);
 
@@ -65,77 +93,84 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
     // extract CrCb channels
     auto CrCb_coefficients = std::optional<torch::Tensor>{};
 
-    if (srcinfo.num_components > 1) {
+    if (srcinfo.num_components > 1)
+    {
         CrCb_coefficients = torch::empty({2,
                                           srcinfo.comp_info[1].height_in_blocks,
                                           srcinfo.comp_info[1].width_in_blocks,
                                           DCTSIZE,
-                                          DCTSIZE
-                                         }, torch::kShort);
+                                          DCTSIZE},
+                                         torch::kShort);
 
         cw = 0;
         extract_channel(srcinfo, src_coef_arrays, 1, *CrCb_coefficients, quantization, cw);
         extract_channel(srcinfo, src_coef_arrays, 2, *CrCb_coefficients, quantization, cw);
     }
 
-
     // cleanup
     jpeg_finish_decompress(&srcinfo);
 
     return {
-            dimensions,
-            quantization,
-            Y_coefficients,
-            CrCb_coefficients
-    };
+        dimensions,
+        quantization,
+        Y_coefficients,
+        CrCb_coefficients};
 }
 
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> read_coefficients(const std::string &path) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> read_coefficients(const std::string &path)
+{
     // open the file
     FILE *infile;
-    if ((infile = fopen(path.c_str(), "rb")) == nullptr) {
-        return {};
+    if ((infile = fopen(path.c_str(), "rb")) == nullptr)
+    {
+        std::ostringstream ss;
+        ss << "Unable to open file for reading: " << path;
+        throw std::runtime_error(ss.str());
     }
 
     // start decompression
-    jpeg_decompress_struct srcinfo{};
-    struct jpeg_error_mgr srcerr{};
+    jpeg_decompress_struct cinfo{};
 
-    srcinfo.err = jpeg_std_error(&srcerr);
-    srcinfo.err->output_message = [](j_common_ptr cinfo) {};
-    jpeg_create_decompress(&srcinfo);
+    struct jpeg_error_mgr jerr;
+    cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = raise_libjpeg;
 
-    jpeg_stdio_src(&srcinfo, infile);
+    jpeg_create_decompress(&cinfo);
 
-    auto ret = read_coefficients_using(srcinfo);
+    jpeg_stdio_src(&cinfo, infile);
 
-    jpeg_destroy_decompress(&srcinfo);
+    auto ret = read_coefficients_using(cinfo);
+
+    jpeg_destroy_decompress(&cinfo);
     fclose(infile);
 
     return ret;
 }
 
-void set_quantization(j_compress_ptr cinfo, torch::Tensor quantization) {
+void set_quantization(j_compress_ptr cinfo, torch::Tensor quantization)
+{
     int num_components = quantization.size(0);
     std::copy_n(quantization.data_ptr<int16_t>(), DCTSIZE2, cinfo->quant_tbl_ptrs[0]->quantval);
 
-    if (num_components > 1) {
+    if (num_components > 1)
+    {
         std::copy_n(quantization.data_ptr<int16_t>() + DCTSIZE2, DCTSIZE2, cinfo->quant_tbl_ptrs[1]->quantval);
     }
 }
 
-jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
-    auto block_arrays = (jvirt_barray_ptr *) (*cinfo->mem->alloc_small)((j_common_ptr) cinfo,
-                                                                        JPOOL_IMAGE,
-                                                                        sizeof(jvirt_barray_ptr *) *
-                                                                        cinfo->num_components);
+jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo)
+{
+    auto block_arrays = (jvirt_barray_ptr *)(*cinfo->mem->alloc_small)((j_common_ptr)cinfo,
+                                                                       JPOOL_IMAGE,
+                                                                       sizeof(jvirt_barray_ptr *) *
+                                                                           cinfo->num_components);
 
     std::transform(cinfo->comp_info, cinfo->comp_info + cinfo->num_components, block_arrays,
                    [&](jpeg_component_info &compptr) {
-                       int MCU_width = jdiv_round_up((long) cinfo->jpeg_width, (long) compptr.MCU_width);
-                       int MCU_height = jdiv_round_up((long) cinfo->jpeg_height, (long) compptr.MCU_height);
+                       int MCU_width = jdiv_round_up((long)cinfo->jpeg_width, (long)compptr.MCU_width);
+                       int MCU_height = jdiv_round_up((long)cinfo->jpeg_height, (long)compptr.MCU_height);
 
-                       return (cinfo->mem->request_virt_barray)((j_common_ptr) cinfo,
+                       return (cinfo->mem->request_virt_barray)((j_common_ptr)cinfo,
                                                                 JPOOL_IMAGE,
                                                                 TRUE,
                                                                 MCU_width,
@@ -146,7 +181,8 @@ jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
     return block_arrays;
 }
 
-void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2) {
+void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2)
+{
 
     cinfo->jpeg_width = cinfo->image_width;
     cinfo->jpeg_height = cinfo->image_height;
@@ -162,13 +198,15 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2) {
     cinfo->comp_info[0].MCU_width = 1;
     cinfo->comp_info[0].MCU_height = 1;
 
-    if (cinfo->num_components > 1) {
+    if (cinfo->num_components > 1)
+    {
         cinfo->comp_info[0].h_samp_factor = color_samp_factor;
         cinfo->comp_info[0].v_samp_factor = color_samp_factor;
         cinfo->comp_info[0].MCU_width = color_samp_factor;
         cinfo->comp_info[0].MCU_height = color_samp_factor;
 
-        for (int c = 1; c < cinfo->num_components; c++) {
+        for (int c = 1; c < cinfo->num_components; c++)
+        {
             cinfo->comp_info[c].component_id = c;
             cinfo->comp_info[c].h_samp_factor = 1;
             cinfo->comp_info[c].v_samp_factor = 1;
@@ -188,12 +226,15 @@ void set_channel(const jpeg_compress_struct &cinfo,
                  torch::Tensor coefficients,
                  jvirt_barray_ptr *dest_coef_arrays,
                  int compNum,
-                 int &coefficients_written) {
-    for (JDIMENSION rowNum = 0; rowNum < cinfo.comp_info[compNum].height_in_blocks; rowNum++) {
-        JBLOCKARRAY rowPtrs = cinfo.mem->access_virt_barray((j_common_ptr) &cinfo, dest_coef_arrays[compNum],
+                 int &coefficients_written)
+{
+    for (JDIMENSION rowNum = 0; rowNum < cinfo.comp_info[compNum].height_in_blocks; rowNum++)
+    {
+        JBLOCKARRAY rowPtrs = cinfo.mem->access_virt_barray((j_common_ptr)&cinfo, dest_coef_arrays[compNum],
                                                             rowNum, 1, TRUE);
 
-        for (JDIMENSION blockNum = 0; blockNum < cinfo.comp_info[compNum].width_in_blocks; blockNum++) {
+        for (JDIMENSION blockNum = 0; blockNum < cinfo.comp_info[compNum].width_in_blocks; blockNum++)
+        {
             std::copy_n(coefficients.data_ptr<int16_t>() + coefficients_written, DCTSIZE2, rowPtrs[0][blockNum]);
             coefficients_written += DCTSIZE2;
         }
@@ -204,16 +245,22 @@ void write_coefficients(const std::string &path,
                         torch::Tensor dimensions,
                         torch::Tensor quantization,
                         torch::Tensor Y_coefficients,
-                        std::optional<torch::Tensor> CrCb_coefficients = std::nullopt) {
+                        std::optional<torch::Tensor> CrCb_coefficients = std::nullopt)
+{
     FILE *outfile;
-    if ((outfile = fopen(path.c_str(), "wb")) == nullptr) {
-        return;
+    if ((outfile = fopen(path.c_str(), "wb")) == nullptr)
+    {
+        std::ostringstream ss;
+        ss << "Unable to open file for reading: " << path;
+        throw std::runtime_error(ss.str());
     }
 
     jpeg_compress_struct cinfo{};
-    struct jpeg_error_mgr srcerr{};
 
-    cinfo.err = jpeg_std_error(&srcerr);
+    struct jpeg_error_mgr jerr;
+    cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = raise_libjpeg;
+
     jpeg_create_compress(&cinfo);
     jpeg_stdio_dest(&cinfo, outfile);
 
@@ -234,7 +281,8 @@ void write_coefficients(const std::string &path,
     int cw = 0;
     set_channel(cinfo, Y_coefficients, coef_dest, 0, cw);
 
-    if (CrCb_coefficients) {
+    if (CrCb_coefficients)
+    {
         cw = 0;
         set_channel(cinfo, *CrCb_coefficients, coef_dest, 1, cw);
         set_channel(cinfo, *CrCb_coefficients, coef_dest, 2, cw);
@@ -246,20 +294,27 @@ void write_coefficients(const std::string &path,
     fclose(outfile);
 }
 
-extern "C" {
+extern "C"
+{
     // On some machines, this free will be name-mangled if it isn't in extern "C" here
-    void free_buffer(unsigned char *buffer) {
+    void free_buffer(unsigned char *buffer)
+    {
         free(buffer);
     }
 }
 
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true)
+{
     // Use libjpeg to compress the pixels into a memory buffer, this is slightly wasteful
     // as it performs entropy coding
-    struct jpeg_compress_struct cinfo{};
-    struct jpeg_error_mgr jerr{};
+    struct jpeg_compress_struct cinfo
+    {
+    };
 
+    struct jpeg_error_mgr jerr;
     cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = raise_libjpeg;
+
     jpeg_create_compress(&cinfo);
 
     unsigned long compressed_size;
@@ -280,7 +335,8 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
     jpeg_start_compress(&cinfo, TRUE);
 
     JSAMPROW row_pointer[1];
-    while (cinfo.next_scanline < cinfo.image_height) {
+    while (cinfo.next_scanline < cinfo.image_height)
+    {
         row_pointer[0] = channel_interleaved.data_ptr<JSAMPLE>() +
                          cinfo.next_scanline * channel_interleaved.size(1) * channel_interleaved.size(2);
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
@@ -291,7 +347,9 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
 
     // Decompress memory buffer to DCT coefficients
     jpeg_decompress_struct srcinfo{};
-    struct jpeg_error_mgr srcerr{};
+    struct jpeg_error_mgr srcerr
+    {
+    };
 
     srcinfo.err = jpeg_std_error(&srcerr);
     jpeg_create_decompress(&srcinfo);
@@ -306,9 +364,12 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
     return ret;
 }
 
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+{
     py::options options;
-	options.disable_function_signatures();
+    options.disable_function_signatures();
+
+    py::register_exception<libjpeg_exception>(m, "LibjpegError");
 
     m.import("torch");
 
