@@ -33,7 +33,7 @@ include = ["src/libjpeg/*"]
 
 [tool.poetry.dependencies]
 
-python = ">= 3.6.2, < 3.9"
+python = ">= 3.7, < 4.0"
 
 torch = "1.7.1"
 torchvision = "0.8.2"
@@ -46,11 +46,11 @@ dunamai = "^1.3.0"
 invoke = "^1.4.1"
 colorama = "^0.4.3"
 
-black = { version = "^19.10b0", python = ">=3.6 <3.9" }
+black = { version = "^19.10b0", python = ">=3.7 <4.0" }
 isort = "^5.5.2"
 
 mypy = "^0.782"
-pylint = "2.6.0"
+pylint = "2.6.2"
 
 sphinx = ">=2,<3"
 pydocstyle = "^5.0.2"
@@ -66,7 +66,7 @@ pytest-cov = "^2.10.0"
 [tool.black]
 
 line-length = 1000
-target-version = ["py36", "py37", "py38"]
+target-version = ["py37", "py38"] # TODO when black releases a new version, add py39
 
 [tool.pylint.master]
 
@@ -82,6 +82,7 @@ unsafe-load-any-extension = true
 # mising-module-docstring: many modules have a single function which contains a docstring
 # wrong-import-order: isort takes care of this
 # not-callable: https://github.com/pytorch/pytorch/pull/25093
+# unsubscriptable-object: https://github.com/PyCQA/pylint/issues/3882
 disable = """,
     line-too-long,
     trailing-whitespace,
@@ -89,6 +90,7 @@ disable = """,
     missing-module-docstring,
     wrong-import-order,
     not-callable,
+    unsubscriptable-object
     """
 
 [tool.pylint.typecheck]
@@ -108,7 +110,7 @@ profile = "black"
 [build-system]
 
 requires = [
-    "poetry>=1.0.10",
+    "poetry>=1.1.4",
     "torch==1.7.1",
 ]
 build-backend = "poetry.masonry.api"
