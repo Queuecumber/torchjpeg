@@ -35,8 +35,8 @@ include = ["src/libjpeg/*"]
 
 python = ">= 3.7, < 4.0"
 
-torch = "1.8.0"
-torchvision = "0.9.0"
+torch = "1.8.1"
+torchvision = "0.9.1"
 Pillow = ">=7.2.0"
 
 [tool.poetry.dev-dependencies]
@@ -101,7 +101,7 @@ generated-members = "numpy.*,torch.*"
 
 addopts = "--cov=torchjpeg --cov-report term --cov-append"
 
-# TODO mypy: https://github.com/python/mypy/pull/5208
+# TODO mypy: https://github.com/python/mypy/pull/10219
 
 [tool.isort]
 
@@ -111,6 +111,6 @@ profile = "black"
 
 requires = [
     "poetry>=1.1.4",
-    "torch==1.8.0",
+    "torch==1.8.1",
 ]
 build-backend = "poetry.masonry.api"
