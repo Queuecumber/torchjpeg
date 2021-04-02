@@ -117,7 +117,7 @@ block_doubler = torch.einsum("ijab,ijmn,mnzxy,xypq,zpqrw->abrw", dct, resizer, r
 block_halver = torch.einsum("mnzab,ijab,zijrw,rwxy,xypq->mnpq", reblocker, dct, macroblocker, halfsizer, dct)
 
 
-def double_nn_dct(input_dct: Tensor) -> Tensor:
+def double_nn_dct(input_dct: Tensor, op: Tensor = block_doubler) -> Tensor:
     r"""
     DCT domain nearest neighbor doubling
 
@@ -126,23 +126,22 @@ def double_nn_dct(input_dct: Tensor) -> Tensor:
 
     Args:
         input_dct (Tensor): The input DCT coefficients in the format :math:`(N, C, H, W)`
+        op (Tensor): The doubling operation tensor, mostly used to satisfy torchscript. Should be of shape :math:`8 \times 8 \times 16 \times 16`. Leave as default unless you know what you're doing.
 
     Returns:
         Tensor: The coefficients of the resized image, double the height and width of the input.
     """
     if input_dct.is_cuda:
-        dop = block_doubler.cuda()
-    else:
-        dop = block_doubler
+        op = op.cuda()
 
     dct_blocks = blockify(input_dct, 8)
-    dct_doubled = torch.einsum("abrw,ncdab->ncdrw", [dop, dct_blocks])
+    dct_doubled = torch.einsum("abrw,ncdab->ncdrw", [op, dct_blocks])
     deblocked_doubled = deblockify(dct_doubled, (input_dct.shape[2] * 2, input_dct.shape[3] * 2))
 
     return deblocked_doubled
 
 
-def half_nn_dct(input_dct: Tensor) -> Tensor:
+def half_nn_dct(input_dct: Tensor, op: Tensor = block_halver) -> Tensor:
     r"""
     DCT domain nearest neighbor half-sizing
 
@@ -151,17 +150,16 @@ def half_nn_dct(input_dct: Tensor) -> Tensor:
 
     Args:
         input_dct (Tensor): The input DCT coefficients in the format :math:`(N, C, H, W)`
+        op (Tensor): The halving operation tensor, mostly used to satisfy torchscript. Should be of shape :math:`16 \times 16 \times 8 \times 8`. Leave as default unless you know what you're doing.
 
     Returns:
         Tensor: The coefficients of the resized image, halg the height and width of the input.
     """
     if input_dct.is_cuda:
-        dop = block_halver.cuda()
-    else:
-        dop = block_halver
+        op = op.cuda()
 
     dct_blocks = blockify(input_dct, 16)
-    dct_halved = torch.einsum("abrw,ncdab->ncdrw", [dop, dct_blocks])
+    dct_halved = torch.einsum("abrw,ncdab->ncdrw", [op, dct_blocks])
     deblocked_halved = deblockify(dct_halved, (input_dct.shape[2] // 2, input_dct.shape[3] // 2))
 
     return deblocked_halved

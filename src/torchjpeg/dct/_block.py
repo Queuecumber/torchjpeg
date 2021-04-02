@@ -62,7 +62,7 @@ def deblockify(blocks: Tensor, size: Tuple[int, int]) -> Tensor:
     ch = blocks.shape[1]
     block_size = blocks.shape[3]
 
-    blocks = blocks.reshape(bs * ch, -1, block_size ** 2)
+    blocks = blocks.reshape(bs * ch, -1, int(block_size ** 2))
     blocks = blocks.transpose(1, 2)
     blocks = torch.nn.functional.fold(blocks, output_size=size, kernel_size=(block_size, block_size), stride=(block_size, block_size))
     blocks = blocks.reshape(bs, ch, size[0], size[1])
