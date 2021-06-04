@@ -93,15 +93,15 @@ def block_idct(coeff: Tensor) -> Tensor:
         coeff (Tensor): The blockwise DCT coefficients in the format :math:`(N, C, L, H, W)`
 
     Returns:
-        Tensor: The pixels for each block in the same format as the input. 
+        Tensor: The pixels for each block in the same format as the input.
 
     Note:
-        This function computes the inverse DCT given by 
+        This function computes the inverse DCT given by
 
         .. math::
             I_{x,y}={\frac {1}{\sqrt{2N}}}\sum _{i=0}^{N}\sum _{j=0}^{N}\alpha (i)\alpha (j)D_{i,j}\cos \left[{\frac {(2x+1)i\pi }{2N}}\right]\cos \left[{\frac {(2y+1)j\pi }{2N}}\right]
 
-        See :py:func:`block_dct` for further details. 
+        See :py:func:`block_dct` for further details.
     """
     N = coeff.shape[3]
 
@@ -118,7 +118,7 @@ def block_idct(coeff: Tensor) -> Tensor:
 
 def batch_dct(batch: Tensor) -> Tensor:
     r"""
-    Computes the DCT of a batch of images. See :py:func:`block_dct` for more details. 
+    Computes the DCT of a batch of images. See :py:func:`block_dct` for more details.
     This function takes care of splitting the images into blocks for the :py:func:`block_dct` and reconstructing
     the original shape of the input after the DCT.
 
@@ -142,7 +142,7 @@ def batch_dct(batch: Tensor) -> Tensor:
 
 def batch_idct(coeff: Tensor) -> Tensor:
     r"""
-    Computes the inverse DCT of a batch of coefficients. See :py:func:`block_dct` for more details. 
+    Computes the inverse DCT of a batch of coefficients. See :py:func:`block_dct` for more details.
     This function takes care of splitting the images into blocks for the :py:func:`block_idct` and reconstructing
     the original shape of the input after the inverse DCT.
 
@@ -171,7 +171,7 @@ def fdct(im: Tensor) -> Tensor:
     Args:
         im (Tensor): A single image of format :math:`(C, H, W)`
 
-    Returns: 
+    Returns:
         Tensor: The DCT coefficients of the input in the same format.
 
     Note:
@@ -188,7 +188,7 @@ def idct(coeff: Tensor) -> Tensor:
     Args:
         im (Tensor): DCT coefficients of format :math:`(C, H, W)`
 
-    Returns: 
+    Returns:
         Tensor: The image pixels of the input in the same format.
 
     Note:
@@ -254,11 +254,11 @@ def denormalize(dct: Tensor, stats: Stats, channel: Optional[str] = None) -> Ten
 
 def batch_to_images(dct: Tensor, stats: Optional[Stats] = None, crop: Optional[Tensor] = None, channel: Optional[str] = None) -> Tensor:
     r"""
-    Converts a batch of DCT coefficients to a batch of images. 
-    
-    This high level convenience function wraps several operations. If stats are given, the coefficients are 
+    Converts a batch of DCT coefficients to a batch of images.
+
+    This high level convenience function wraps several operations. If stats are given, the coefficients are
     assumed to have been channel-wise and frequency-wise normalized and are denormalized. The coefficients are tranformed to pixels and uncentered (converted from
-    [-128, 127] to [0, 255]). If the input is multichannel, it is converted from YCbCr to RGB. The image is then optionally cropped to remove padding that may 
+    [-128, 127] to [0, 255]). If the input is multichannel, it is converted from YCbCr to RGB. The image is then optionally cropped to remove padding that may
     have been added to make the coefficients. The output is then rescaled to [0, 1] to match pytorch conventions.
 
     Args:
@@ -296,17 +296,17 @@ def batch_to_images(dct: Tensor, stats: Optional[Stats] = None, crop: Optional[T
 
 def images_to_batch(spatial: Tensor, stats: Optional[Stats] = None, channel: Optional[str] = None) -> Tensor:
     r"""
-    Converts a batch of images to a batch of DCT coefficients. 
-    
-    This high level convenience function wraps several operations. The input images are assumed to follow the pytorch convention of being in [0, 1] 
-    and are rescaled to [0, 255]. If the images are multichannel, they are converted to YCbCr and then centered (in [-128, 127]). The 
+    Converts a batch of images to a batch of DCT coefficients.
+
+    This high level convenience function wraps several operations. The input images are assumed to follow the pytorch convention of being in [0, 1]
+    and are rescaled to [0, 255]. If the images are multichannel, they are converted to YCbCr and then centered (in [-128, 127]). The
     DCT is taken and if stats are given, the coefficients are normalized.
 
     Args:
         spatial (Tensor): A batch of images in :math:`(N, C, H, W)` format.
         stats (Optional[:py:class:DCTStats]): Optional DCT per-channel and per-frequency statistics to normalize the coefficients.
         channel (Optional[str]): One of 'Y', 'Cb', 'Cr'. Normalization of a single channel input assumes 'Y' channel by default, use this parameter to override that.
-        
+
 
     Returns:
         A batch of DCT coefficients computed from the input images.
@@ -358,7 +358,7 @@ def zigzag(coefficients: Tensor) -> Tensor:
 
     Args:
         coefficients (Tensor): DCT coefficients of shape :math:`(N, C, H, W)` or :math:`(C, H, W)`.
-    
+
     Returns:
         Tensor: A batch of vectorized coefficients of shape :math:`(N, C, L, 64)` or :math:`(C, L, 64)`
 

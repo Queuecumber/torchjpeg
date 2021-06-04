@@ -23,7 +23,7 @@ def size(image: Union[Tensor, Image.Image], **kwargs) -> Tuple[Tensor, Tensor]:
             The compressed image
 
     Warning:
-        The output of this function is **not** differentiable. It compresses the image to memory and reads the size of 
+        The output of this function is **not** differentiable. It compresses the image to memory and reads the size of
         the resulting buffer.
     """
     if isinstance(image, Tensor):

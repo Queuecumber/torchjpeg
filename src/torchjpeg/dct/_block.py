@@ -15,16 +15,16 @@ def blockify(im: Tensor, size: int) -> Tensor:
         The image to break into blocks, must be in :math:`(N, C, H, W)` format.
     size : Tuple[int, int]
         The size of the blocks in :math:`(H, W)` format.
-    
+
     Returns
     -------
     A tensor containing the non-overlappng blocks in :math:`(N, C, L, H, W)` format where :math:`L` is the
-    number of non-overlapping blocks in the image channel indexed by :math:`(N, C)` and :math:`(H, W)` matches 
+    number of non-overlapping blocks in the image channel indexed by :math:`(N, C)` and :math:`(H, W)` matches
     the block size.
 
     Note
     ----
-    If the image does not split evenly into blocks of the given size, the result will have some overlap. It 
+    If the image does not split evenly into blocks of the given size, the result will have some overlap. It
     is the callers responsibility to pad the input to a multiple of the block size, no error will be thrown
     in this case.
     """

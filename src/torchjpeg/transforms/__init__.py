@@ -10,7 +10,7 @@ class YChannel:
     Converts a tensor with a color image in [0, 1] to the Y channel using ITU-R BT.601 conversion
 
     Warning:
-        This is **not** equivalent to the Y channel of a color image that would be used by JPEG, the result 
+        This is **not** equivalent to the Y channel of a color image that would be used by JPEG, the result
         is in [16, 240] following the ITU-R BT.601 standard before normalization. This is useful for certian JPEG artifact correction
         algorithms due to some questionable evaluation choices by that community. The result **is** normalized to :math:`\left[\frac{16}{255},\frac{240}{255}\right]`
         before being returned.
@@ -36,7 +36,7 @@ class YCbCr:
     Converts a PIL image to YCbCr color space
 
     Note:
-        PIL follows the JPEG YCbCr color conversion giving a result in [0, 255]. 
+        PIL follows the JPEG YCbCr color conversion giving a result in [0, 255].
     """
 
     def __init__(self):
@@ -51,10 +51,10 @@ class YCbCr:
 
 class RandomJPEG:
     r"""
-    Applies JPEG compression on a PIL at a random quality. 
+    Applies JPEG compression on a PIL at a random quality.
 
     Args:
-        quality_range (Tuple[int, int]): The quality range to choose from, inclusive on both ends. 
+        quality_range (Tuple[int, int]): The quality range to choose from, inclusive on both ends.
             An integer in this range will be chosen at random and will be used as the compression quality setting.
     """
 

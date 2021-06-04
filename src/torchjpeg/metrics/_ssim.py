@@ -2,7 +2,10 @@ import torch
 from torch import Tensor
 
 
-def ssim_single(image: Tensor, target: Tensor,) -> Tensor:
+def ssim_single(
+    image: Tensor,
+    target: Tensor,
+) -> Tensor:
     r"""
     Computes SSIM for a single channel
     """
@@ -38,7 +41,7 @@ def ssim(image: Tensor, target: Tensor) -> Tensor:
 
     Note:
         This function uses an :math:`8 \times 8` uniform averaging window used in JPEG evaluation tasks instead of the :math:`11 \times 11` gaussian window
-        used in the original paper and by default in other SSIM implementations. 
+        used in the original paper and by default in other SSIM implementations.
 
         [1] Wang, Zhou, et al. "Image quality assessment: from error visibility to structural similarity." IEEE transactions on image processing 13.4 (2004): 600-612.
     """

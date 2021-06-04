@@ -15,7 +15,20 @@ def build(setup_kwargs):
     libjpeg_dir = pathlib.Path(__file__).parent.absolute() / "src" / "libjpeg"
 
     setup_kwargs.update(
-        {"ext_modules": [CppExtension("torchjpeg.codec._codec_ops", ["src/torchjpeg/codec/codec_ops.cpp",], include_dirs=[str(libjpeg_dir)], extra_objects=[str(libjpeg_dir / ".libs" / "libjpeg.a")], extra_compile_args=["-std=c++17"],)], "cmdclass": {"build_ext": BuildExtension},}
+        {
+            "ext_modules": [
+                CppExtension(
+                    "torchjpeg.codec._codec_ops",
+                    [
+                        "src/torchjpeg/codec/codec_ops.cpp",
+                    ],
+                    include_dirs=[str(libjpeg_dir)],
+                    extra_objects=[str(libjpeg_dir / ".libs" / "libjpeg.a")],
+                    extra_compile_args=["-std=c++17"],
+                )
+            ],
+            "cmdclass": {"build_ext": BuildExtension},
+        }
     )
 
 

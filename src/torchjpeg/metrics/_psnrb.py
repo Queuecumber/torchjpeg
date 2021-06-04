@@ -7,7 +7,7 @@ def blocking_effect_factor(im: Tensor) -> Tensor:
     r"""
     Computes the blocking effect factor (BEF) of an image as defined in [1].
 
-    Blocking effect factor is used as part of :py:func:`psnrb` but can also be used 
+    Blocking effect factor is used as part of :py:func:`psnrb` but can also be used
     as an objective measure of "blockiness".
 
     Args:
@@ -52,7 +52,7 @@ def blocking_effect_factor(im: Tensor) -> Tensor:
 
 def psnrb(image: Tensor, target: Tensor) -> Tensor:
     r"""
-    Computes the peak signal-to-noise ratio with blocking effect factor from [1]. 
+    Computes the peak signal-to-noise ratio with blocking effect factor from [1].
 
     PSNR-B augments the PSNR measure by including the "blockiness" of the degraded image as a way to reduce
     the PSNR. For multichannel inputs, the PSNR-B is computed separately for each channel and then averaged.
@@ -66,7 +66,7 @@ def psnrb(image: Tensor, target: Tensor) -> Tensor:
 
     Warning:
         Unlike most metrics this is not symmetric and the order of the arguents is imporant. Blocking effect factor
-        is only computed for the degraded image, so if the arguments are reversed, there will be very little difference 
+        is only computed for the degraded image, so if the arguments are reversed, there will be very little difference
         between this and :py:func:`psnr`.
 
     Note:

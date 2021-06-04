@@ -19,7 +19,7 @@ def quantize(dct: Tensor, mat: Tensor, round_func: Callable[[Tensor], Tensor] = 
         Tensor: Quantized DCT coefficients.
 
     Note:
-        DCT quantization is computed as 
+        DCT quantization is computed as
 
         .. math::
             \widetilde{D}_{ij} = \left\lfloor \frac{D_{ij}}{Q_{ij}} \right\rceil
@@ -44,7 +44,7 @@ def dequantize(dct: Tensor, mat: Tensor) -> Tensor:
         Tensor: Quantized DCT coefficients.
 
     Note:
-        DCT dequantization is computed as 
+        DCT dequantization is computed as
 
         .. math::
             D_{ij} = \widetilde{D}_{ij} \cdot Q_{ij}

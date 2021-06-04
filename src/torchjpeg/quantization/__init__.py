@@ -27,7 +27,7 @@ def quantize_multichannel(dct: Tensor, mat: Tensor, round_func: Callable[[Tensor
         dct (Tensor): DCT coefficients of shape :math:`(N, 3, H, W)`.
         mat (Tensor): Quantization matrix of shape :math:`(1, 2, 8, 8)`.
         round: (Callable[[Tensor], Tensor]): Rounding function to use, defaults to :py:func:`torch.round`.
-    
+
     Returns
     -------
         Tensor
@@ -36,7 +36,7 @@ def quantize_multichannel(dct: Tensor, mat: Tensor, round_func: Callable[[Tensor
             Cb channel coefficients of shape :math:`\left(N, 1, \frac{H}{2}, \frac{W}{2}\right)`.
         Tensor
             Cr channel coefficients of shape :math:`\left(N, 1, \frac{H}{2}, \frac{W}{2}\right)`.
-        
+
     Note:
         This function performs chroma subsampling
     """
@@ -47,7 +47,11 @@ def quantize_multichannel(dct: Tensor, mat: Tensor, round_func: Callable[[Tensor
     cb_coefficients = half_nn_dct(cb_coefficients)
     cr_coefficients = half_nn_dct(cr_coefficients)
 
-    y_coefficients = quantize(y_coefficients, mat[:, 0:1, :, :], round_func=round_func,)
+    y_coefficients = quantize(
+        y_coefficients,
+        mat[:, 0:1, :, :],
+        round_func=round_func,
+    )
     cb_coefficients = quantize(cb_coefficients, mat[:, 1:2, :, :], round_func=round_func)
     cr_coefficients = quantize(cr_coefficients, mat[:, 1:2, :, :], round_func=round_func)
 

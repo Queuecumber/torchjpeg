@@ -98,7 +98,7 @@ def get_coefficients_for_qualities(quality: Tensor, table: str = "luma") -> Tens
     Args:
         quality (Tensor): A batch of qualities of shape :math:`(N)`
         table (str): A string indicating the table to use, either "luma" or "chroma"
-    
+
     """
     scaler = qualities_to_scale_factors(quality)
     mat = scale_quantization_matrices(scaler, table=table)
@@ -136,7 +136,7 @@ def dequantize_at_quality(dct: Tensor, quality: int, table: str = "luma") -> Ten
 
 def compress_coefficients(batch: Tensor, quality: int, table: str = "luma") -> Tensor:
     r"""
-    A high level function that takes a batch of pixels in [0, 1] and returns quantized DCT coefficients. 
+    A high level function that takes a batch of pixels in [0, 1] and returns quantized DCT coefficients.
 
     Args:
         batch (Tensor): A batch of images to quantize of shape `(N, 1, H, W)`.

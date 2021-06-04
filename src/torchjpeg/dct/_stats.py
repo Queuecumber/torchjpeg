@@ -9,9 +9,9 @@ class Stats:
     r"""
     This class holds pre-computed per-channel and per-frequency DCT coefficient stats.
 
-    The stats are loaded from a file, this can be written using :py:func:`torch.save`. 
+    The stats are loaded from a file, this can be written using :py:func:`torch.save`.
     The file should contain a single dictionary with string keys containing channel names.
-    The value of each entry should be a dictionary with the keys: "mean, variance, min, and max" 
+    The value of each entry should be a dictionary with the keys: "mean, variance, min, and max"
     with the corresponding statistics as Tensors.
 
     Args:
