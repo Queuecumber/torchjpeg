@@ -12,4 +12,4 @@ torchjpeg
    torchjpeg.dct
    torchjpeg.metrics
    torchjpeg.quantization
-   torchjpeg.transforms
+   torchjpeg.data

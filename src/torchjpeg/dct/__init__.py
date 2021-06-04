@@ -7,7 +7,7 @@ This package includes additional utilities for splitting images into non-overlap
 color transforms on Tensors, and normalizing DCT coefficients as preparation for input to a CNN.
 """
 import math
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import torch
 from torch import Tensor

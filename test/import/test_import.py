@@ -18,5 +18,9 @@ def test_import_torchjpeg_quantization():
     import torchjpeg.quantization
 
 
+def test_import_torchjpeg_data():
+    import torchjpeg.data
+
+
 def test_import_torchjpeg_transforms():
-    import torchjpeg.transforms
+    import torchjpeg.data.transforms
