@@ -1,3 +1,4 @@
+import importlib.resources
 from pathlib import Path
 from typing import Union
 
@@ -14,18 +15,27 @@ class Stats:
     The value of each entry should be a dictionary with the keys: "mean, variance, min, and max"
     with the corresponding statistics as Tensors.
 
+    Pre-computed stats are available for color or grayscale images (pass "color" and "grayscale" respectively for
+    the root argument), these stats were computed from the Flickr 2k dataset, a large corpus of high quality images and
+    are suitable for general use.
+
     Args:
-        root (:py:class:`pathlib.Path`): The path to load the statistics from.
+        root (:py:class:`pathlib.Path`, string, or literals "color", "grayscale"): The path to load the statistics from or "color" to use built in color stats or "grayscale" to use built in grayscale stats.
         normtype (str): Either "ms" for mean-variance normalization or "01" for zero-one normalization.
     """
 
     def __init__(self, root: Union[str, Path], normtype: str = "ms") -> None:
         self.type = normtype
 
-        if isinstance(root, str):
-            root = Path(root)
+        if root in ("color", "grayscale"):
+            reader = importlib.resources.open_binary("torchjpeg.dct.stats", f"{root}.pt")
+        else:
+            if isinstance(root, str):
+                root = Path(root)
 
-        stats = torch.load(root.open("rb"))
+            reader = root.open("rb")
+
+        stats = torch.load(reader)
 
         self.mean = {x: stats[x]["mean"].view(1, 1, 8, 8) for x in stats.keys()}
         self.variance = {x: stats[x]["variance"].view(1, 1, 8, 8) for x in stats.keys()}
