@@ -8,7 +8,7 @@ import torchjpeg.codec
 from torchjpeg.dct import Stats
 
 from .image_list import ImageList
-from .jpeg_quantized_dataset import __prep_coefficients
+from .jpeg_quantized_dataset import _prep_coefficients
 
 
 class FolderOfJpegDataset(torch.utils.data.Dataset):
@@ -44,7 +44,7 @@ class FolderOfJpegDataset(torch.utils.data.Dataset):
 
         dim, quantization, Y_coefficients, CbCr_coefficients = torchjpeg.codec.read_coefficients(str(image))  # type: ignore
 
-        y_dequantized, cbcr_dequantized, y_q, c_q = __prep_coefficients(quantization, Y_coefficients, CbCr_coefficients, self.stats)
+        y_dequantized, cbcr_dequantized, y_q, c_q = _prep_coefficients(quantization, Y_coefficients, CbCr_coefficients, self.stats)
 
         return y_dequantized.squeeze(0), cbcr_dequantized.squeeze(0), y_q.unsqueeze(0), c_q.unsqueeze(0), image.relative_to(self.path), dim[0]
 

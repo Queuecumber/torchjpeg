@@ -18,7 +18,7 @@ from torchjpeg.quantization.ijg import quantization_max
 from .image_list import ImageList
 
 
-def __dequantize_channel(channel, quantization):
+def _dequantize_channel(channel, quantization):
     dequantized_dct = channel.float() * quantization
     dequantized_dct = dequantized_dct.view(1, 1, dequantized_dct.shape[1] * dequantized_dct.shape[2], 8, 8)
     dequantized_dct = deblockify(dequantized_dct, (channel.shape[1] * 8, channel.shape[2] * 8))
@@ -26,19 +26,19 @@ def __dequantize_channel(channel, quantization):
     return dequantized_dct
 
 
-def __prep_coefficients(quantization: Tensor, Y_coefficients: Tensor, CbCr_coefficients: Tensor, stats: Stats):
+def _prep_coefficients(quantization: Tensor, Y_coefficients: Tensor, CbCr_coefficients: Tensor, stats: Stats):
     quantization = quantization.float()
     y_q = quantization[0]
 
-    y_dequantized = __dequantize_channel(Y_coefficients, y_q)
+    y_dequantized = _dequantize_channel(Y_coefficients, y_q)
     y_q = y_q / quantization_max
     y_dequantized = normalize(y_dequantized, stats, channel="y")
 
     if CbCr_coefficients is not None:
         c_q = quantization[1]  # Assume same quantization for cb and cr
 
-        cb_dequantized = __dequantize_channel(CbCr_coefficients[0:1], c_q)
-        cr_dequantized = __dequantize_channel(CbCr_coefficients[1:2], c_q)
+        cb_dequantized = _dequantize_channel(CbCr_coefficients[0:1], c_q)
+        cr_dequantized = _dequantize_channel(CbCr_coefficients[1:2], c_q)
 
         c_q = c_q / quantization_max
 
@@ -145,7 +145,7 @@ class JPEGQuantizedDataset(Dataset):
 
         groundtruth_dct = images_to_batch(image.unsqueeze(0), self.stats).squeeze(0)  # This *has* to be after quantization
 
-        y_dequantized, cbcr_dequantized, y_q, c_q = __prep_coefficients(quantization, Y_coefficients, CbCr_coefficients, self.stats)
+        y_dequantized, cbcr_dequantized, y_q, c_q = _prep_coefficients(quantization, Y_coefficients, CbCr_coefficients, self.stats)
 
         return (
             y_dequantized.squeeze(0),
