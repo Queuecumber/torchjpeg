@@ -35,8 +35,8 @@ include = ["src/libjpeg/*"]
 
 python = ">= 3.7, < 4.0"
 
-torch = "1.8.1"
-torchvision = "0.9.1"
+torch = "1.9.0"
+torchvision = "0.10.0"
 Pillow = ">=7.2.0"
 
 [tool.poetry.dev-dependencies]
@@ -49,7 +49,7 @@ colorama = "^0.4.3"
 black = { version = "^21.5b2", python = ">=3.7 <4.0" }
 isort = "^5.5.2"
 
-mypy = { git = "https://github.com/python/mypy.git" }  # TODO wait for new mypy release
+mypy = "0.902"  # TODO wait for new mypy release
 pylint = "2.8.3"
 
 sphinx = ">=2,<3"
@@ -114,6 +114,6 @@ profile = "black"
 
 requires = [
     "poetry>=1.1.4",
-    "torch==1.8.1",
+    "torch==1.9.0",
 ]
 build-backend = "poetry.masonry.api"
