@@ -33,10 +33,10 @@ def blockify(im: Tensor, size: int) -> Tensor:
     h = im.shape[2]
     w = im.shape[3]
 
-    im = im.view(bs * ch, 1, h, w)
+    im = im.reshape(bs * ch, 1, h, w)
     im = torch.nn.functional.unfold(im, kernel_size=(size, size), stride=(size, size))
     im = im.transpose(1, 2)
-    im = im.view(bs, ch, -1, size, size)
+    im = im.reshape(bs, ch, -1, size, size)
 
     return im
 

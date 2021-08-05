@@ -38,6 +38,7 @@ python = ">= 3.7, < 4.0"
 torch = "1.9.0"
 torchvision = "0.10.0"
 Pillow = ">=7.2.0"
+sphinxcontrib-katex = "^0.8.6"
 
 [tool.poetry.dev-dependencies]
 
@@ -49,13 +50,12 @@ colorama = "^0.4.3"
 black = { version = "^21.5b2", python = ">=3.7 <4.0" }
 isort = "^5.5.2"
 
-mypy = "0.902"  # TODO wait for new mypy release
-pylint = "2.8.3"
+mypy = "0.910"  # TODO wait for new mypy release
+pylint = "2.9.6"
 
 sphinx = ">=2,<3"
 pydocstyle = "^5.0.2"
 sphinx-book-theme = "^0.0.34"
-"sphinxcontrib.katex" = "^0.6.1"
 myst-parser = "^0.9.1"
 
 pytest = "^6.0.0"
