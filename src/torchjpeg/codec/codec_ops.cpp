@@ -173,7 +173,7 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2) {
 
     jpeg_set_defaults(cinfo);
 
-    cinfo->comp_info[0].component_id = 0;
+    cinfo->comp_info[0].component_id = 1;
     cinfo->comp_info[0].h_samp_factor = 1;
     cinfo->comp_info[0].v_samp_factor = 1;
     cinfo->comp_info[0].quant_tbl_no = 0;
@@ -189,7 +189,7 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2) {
         cinfo->comp_info[0].MCU_height = color_samp_factor;
 
         for (int c = 1; c < cinfo->num_components; c++) {
-            cinfo->comp_info[c].component_id = c;
+            cinfo->comp_info[c].component_id = 1 + c;
             cinfo->comp_info[c].h_samp_factor = 1;
             cinfo->comp_info[c].v_samp_factor = 1;
             cinfo->comp_info[c].quant_tbl_no = 1;
