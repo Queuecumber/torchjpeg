@@ -106,7 +106,9 @@ test:
     #- poetry run pytest test/e2e
   artifacts:
     reports:
-      cobertura: coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
       junit:
         - import.xml
         - unit.xml
