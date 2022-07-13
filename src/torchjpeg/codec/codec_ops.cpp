@@ -166,7 +166,7 @@ jvirt_barray_ptr *request_block_storage(j_compress_ptr cinfo) {
     return block_arrays;
 }
 
-void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2) {
+void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor_vertical = 2, int color_samp_factor_horizontal = 2) {
 
     cinfo->jpeg_width = cinfo->image_width;
     cinfo->jpeg_height = cinfo->image_height;
@@ -183,18 +183,18 @@ void fill_extended_defaults(j_compress_ptr cinfo, int color_samp_factor = 2) {
     cinfo->comp_info[0].MCU_height = 1;
 
     if (cinfo->num_components > 1) {
-        cinfo->comp_info[0].h_samp_factor = color_samp_factor;
-        cinfo->comp_info[0].v_samp_factor = color_samp_factor;
-        cinfo->comp_info[0].MCU_width = color_samp_factor;
-        cinfo->comp_info[0].MCU_height = color_samp_factor;
+        cinfo->comp_info[0].h_samp_factor = color_samp_factor_horizontal;
+        cinfo->comp_info[0].v_samp_factor = color_samp_factor_vertical;
+        cinfo->comp_info[0].MCU_width = color_samp_factor_horizontal;
+        cinfo->comp_info[0].MCU_height = color_samp_factor_vertical;
 
         for (int c = 1; c < cinfo->num_components; c++) {
             cinfo->comp_info[c].component_id = 1 + c;
             cinfo->comp_info[c].h_samp_factor = 1;
             cinfo->comp_info[c].v_samp_factor = 1;
             cinfo->comp_info[c].quant_tbl_no = 1;
-            cinfo->comp_info[c].width_in_blocks = jdiv_round_up(cinfo->jpeg_width, DCTSIZE * color_samp_factor);
-            cinfo->comp_info[c].height_in_blocks = jdiv_round_up(cinfo->jpeg_width, DCTSIZE * color_samp_factor);
+            cinfo->comp_info[c].width_in_blocks = jdiv_round_up(cinfo->jpeg_width, DCTSIZE * color_samp_factor_horizontal);
+            cinfo->comp_info[c].height_in_blocks = jdiv_round_up(cinfo->jpeg_width, DCTSIZE * color_samp_factor_vertical);
             cinfo->comp_info[c].MCU_width = 1;
             cinfo->comp_info[c].MCU_height = 1;
         }
@@ -248,7 +248,11 @@ void write_coefficients(const std::string &path,
     cinfo.input_components = CrCb_coefficients ? 3 : 1;
     cinfo.in_color_space = CrCb_coefficients ? JCS_RGB : JCS_GRAYSCALE;
 
-    fill_extended_defaults(&cinfo);
+    if (CrCb_coefficients) {
+        fill_extended_defaults(&cinfo, (Y_coefficients.size(1) + CrCb_coefficients->size(1) - 1) / CrCb_coefficients->size(1), (Y_coefficients.size(2) + CrCb_coefficients->size(2) - 1) / CrCb_coefficients->size(2));
+    } else {
+        fill_extended_defaults(&cinfo);
+    }
 
     set_quantization(&cinfo, quantization);
 
@@ -257,7 +261,7 @@ void write_coefficients(const std::string &path,
 
     int cw = 0;
     set_channel(cinfo, Y_coefficients, coef_dest, 0, cw);
-
+    
     if (CrCb_coefficients) {
         cw = 0;
         set_channel(cinfo, *CrCb_coefficients, coef_dest, 1, cw);
@@ -277,7 +281,7 @@ void free_buffer(unsigned char *buffer) {
 }
 }
 
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> quantize_at_quality(torch::Tensor pixels, int quality, bool baseline = true) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Tensor>> quantize_at_quality(torch::Tensor pixels, int quality, int color_samp_factor_vertical = 2, int color_samp_factor_horizontal = 2, bool baseline = true) {
     // Use libjpeg to compress the pixels into a memory buffer, this is slightly wasteful
     // as it performs entropy coding
     struct jpeg_compress_struct cinfo {
@@ -300,6 +304,9 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::optional<torch::Ten
 
     jpeg_set_defaults(&cinfo);
     jpeg_set_quality(&cinfo, quality, boolean(baseline));
+
+    cinfo.comp_info[0].h_samp_factor = color_samp_factor_horizontal;
+    cinfo.comp_info[0].v_samp_factor = color_samp_factor_vertical;
 
     // No way that I know of to pass planar images to libjpeg
     auto channel_interleaved = (pixels * 255.f).round().to(torch::kByte).transpose(0, 2).transpose(0, 1).contiguous();
@@ -397,7 +404,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
           py::arg("path"), py::arg("dimensions"), py::arg("quantization"), py::arg("Y_coefficients"),
           py::arg("CrCb_coefficients") = std::nullopt);
     m.def("quantize_at_quality", &quantize_at_quality, R"(
-            quantize_at_quality(pixels: Tensor, quality: int, baseline: bool = true) -> Tuple[Tensor, Tensor, Tensor, Optional[Tensor]]
+            quantize_at_quality(pixels: Tensor, quality: int, color_samp_factor_vertical: int = 2, color_samp_factor_horizontal: int = 2, baseline: bool = true) -> Tuple[Tensor, Tensor, Tensor, Optional[Tensor]]
 
             Quantize pixels using libjpeg at the given quality. By using this function instead of :py:mod:`torchjpeg.quantization` the result
             is guaranteed to be exactly the same as if the JPEG was quantized using an image library like Pillow and the coefficients are returned
@@ -409,6 +416,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
                 A :math:`\left(C, H, W \right)` Tensor of image pixels in pytorch format (normalized to [0, 1]).
             quality : int
                 The integer quality level to quantize to, in [0, 100] with 100 being maximum quality and 0 being minimal quality.
+            color_samp_factor_vertical : int
+                Vertical chroma subsampling factor. Defaults to 2.
+            color_samp_factor_horizontal : int
+                Horizontal chroma subsampling factor. Defaults to 2.
             baseline : bool
                 Use the baseline quantization matrices, e.g. quantization matrix entries cannot be larger than 255. True by default, don't change it unless you know what you're doing.
 
@@ -428,5 +439,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
             -----
             The output format of this function is the same as that of :py:func:`read_coefficients`. 
           )",
-          py::arg("pixels"), py::arg("quality"), py::arg("baseline") = true);
+          py::arg("pixels"), py::arg("quality"), py::arg("color_samp_factor_vertical") = 2, py::arg("color_samp_factor_horizontal") = 2, py::arg("baseline") = true);
 }
