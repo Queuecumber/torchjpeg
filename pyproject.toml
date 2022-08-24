@@ -50,7 +50,7 @@ colorama = "^0.4.3"
 black = { version = "^22.3.0", python = ">=3.7 <4.0" }
 isort = "^5.5.2"
 
-mypy = "0.910"  # TODO wait for new mypy release
+mypy = "0.971"  # TODO wait for new mypy release
 pylint = "2.9.6"
 
 sphinx = ">=2,<3"
@@ -67,7 +67,7 @@ pytest-cov = "^2.10.0"
 [tool.black]
 
 line-length = 1000
-target-version = ["py37", "py38", "py39"] 
+target-version = ["py37", "py38", "py39", "py310"] 
 
 [tool.pylint.master]
 

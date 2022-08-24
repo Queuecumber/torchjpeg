@@ -17,13 +17,13 @@ build-venv:
     - ccache -z
     - python -m venv --copies .venv
     - source .venv/bin/activate
-    - pip install "poetry==1.1.4"
+    - pip install "poetry==1.1.15"
     - poetry install --no-root
     - poetry run python build.py
     - ccache -s
   parallel:
     matrix:
-      - PYVER: ["3.7", "3.8", "3.9"]
+      - PYVER: ["3.7", "3.8", "3.9", "3.10"]
   cache:
     key: 
       files: 
@@ -39,7 +39,7 @@ build-venv:
 
  # Code quality
 .cq-base:
-  image: python:3.9
+  image: python:3.10
   stage: code quality
   before_script:
     - source .venv/bin/activate  
@@ -50,7 +50,7 @@ build-venv:
       files: 
         - poetry.lock
         - src/libjpeg/jversion.h
-      prefix: "3.9"
+      prefix: "3.10"
     paths: 
       - .venv/
       - src/libjpeg
@@ -96,7 +96,7 @@ test:
   stage: test
   parallel:
     matrix:
-      - PYVER: ["3.7", "3.8", "3.9"]
+      - PYVER: ["3.7", "3.8", "3.9", "3.10"]
   before_script:
     - source .venv/bin/activate
     - poetry install
@@ -130,20 +130,20 @@ test:
 
 # Build wheels
 build-wheel:
-  image: quay.io/pypa/manylinux2014_x86_64
+  image: quay.io/pypa/manylinux_2_28_x86_64
   stage: build
   variables: 
     PYBIN: /opt/python/$PYVER/bin
   parallel:
     matrix:
-      - PYVER: [cp37-cp37m, cp38-cp38, cp39-cp39]
+      - PYVER: [cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310]
   script:
     - yum install util-linux
-    - ${PYBIN}/pip install poetry==1.1.4
+    - ${PYBIN}/pip install poetry==1.1.15
     - ${PYBIN}/poetry run pip install "dunamai==1.3.0" "torch==1.12.1"
     - ${PYBIN}/poetry version $(${PYBIN}/poetry run python version.py)
     - ${PYBIN}/poetry build
-    - rename manylinux_2_17 manylinux2014 dist/*
+    - rename manylinux_2_28 manylinux2014 dist/*
   needs: []
   dependencies: []
   artifacts:
@@ -154,7 +154,7 @@ build-wheel:
     - when: always
 
 build-docs:
-  image: python:3.9
+  image: python:3.10
   stage: build
   before_script:
     - source .venv/bin/activate
@@ -170,7 +170,7 @@ build-docs:
       files: 
         - poetry.lock
         - src/libjpeg/jversion.h
-      prefix: "3.9"
+      prefix: "3.10"
     paths: 
       - .venv/
       - src/libjpeg
@@ -183,9 +183,9 @@ build-docs:
 # Deploy
 pypi:
   stage: deploy
-  image: python:3.9
+  image: python:3.10
   script:
-    - pip install "poetry==1.1.4"
+    - pip install "poetry==1.1.15"
     - poetry publish --username __token__ --password ${pypi_push_key}
   rules:
     - if: '$CI_COMMIT_TAG'
@@ -197,7 +197,7 @@ pypi:
 
 pages:
   stage: deploy
-  image: python:3.9
+  image: python:3.10
   script: 
     - mv doc/build/html public
   artifacts:
