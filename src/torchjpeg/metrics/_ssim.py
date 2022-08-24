@@ -9,8 +9,8 @@ def ssim_single(
     r"""
     Computes SSIM for a single channel
     """
-    C1 = 0.01 ** 2
-    C2 = 0.03 ** 2
+    C1 = 0.01**2
+    C2 = 0.03**2
 
     avg_filter = torch.ones(1, 1, 8, 8) / 64
 
@@ -20,11 +20,11 @@ def ssim_single(
     mu_i = torch.nn.functional.conv2d(image, avg_filter)
     mu_t = torch.nn.functional.conv2d(target, avg_filter)
 
-    var_i = torch.nn.functional.conv2d(image ** 2, avg_filter) - mu_i ** 2
-    var_t = torch.nn.functional.conv2d(target ** 2, avg_filter) - mu_t ** 2
+    var_i = torch.nn.functional.conv2d(image**2, avg_filter) - mu_i**2
+    var_t = torch.nn.functional.conv2d(target**2, avg_filter) - mu_t**2
     cov_it = torch.nn.functional.conv2d(target * image, avg_filter) - mu_i * mu_t
 
-    ssim_blocks = ((2 * mu_i * mu_t + C1) * (2 * cov_it + C2)) / ((mu_i ** 2 + mu_t ** 2 + C1) * (var_i + var_t + C2))
+    ssim_blocks = ((2 * mu_i * mu_t + C1) * (2 * cov_it + C2)) / ((mu_i**2 + mu_t**2 + C1) * (var_i + var_t + C2))
     return ssim_blocks.view(image.shape[0], -1).mean(1)
 
 
