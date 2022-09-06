@@ -35,10 +35,9 @@ include = ["src/libjpeg/*"]
 
 python = ">= 3.7, < 4.0"
 
-torch = "1.12.1"
-torchvision = "0.13.1"
+torch = "1.12.1*"
+torchvision = "0.13.1*"
 Pillow = ">=7.2.0"
-sphinxcontrib-katex = "^0.8.6"
 
 [tool.poetry.dev-dependencies]
 
@@ -54,6 +53,7 @@ mypy = "0.971"  # TODO wait for new mypy release
 pylint = "2.9.6"
 
 sphinx = ">=2,<3"
+sphinxcontrib-katex = "^0.8.6"
 pydocstyle = "^5.0.2"
 sphinx-book-theme = "^0.0.34"
 myst-parser = "^0.9.1"
