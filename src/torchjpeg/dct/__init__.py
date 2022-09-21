@@ -80,7 +80,7 @@ def block_dct(blocks: Tensor) -> Tensor:
         n = n.cuda()
         h = h.cuda()
 
-    coeff = (1 / math.sqrt(2 * N)) * n * (h.t() @ blocks @ h)
+    coeff = (2 / N) * n * (h.t() @ blocks @ h)
 
     return coeff
 
@@ -112,7 +112,7 @@ def block_idct(coeff: Tensor) -> Tensor:
         n = n.cuda()
         h = h.cuda()
 
-    im = (1 / math.sqrt(2 * N)) * (h @ (n * coeff) @ h.t())
+    im = (2 / N) * (h @ (n * coeff) @ h.t())
     return im
 
 
