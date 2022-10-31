@@ -186,7 +186,7 @@ pypi:
   stage: deploy
   image: python:3.10
   script:
-    - pip install "poetry==1.1.15"
+    - pip install "poetry==1.2.0"
     - poetry publish --username __token__ --password ${pypi_push_key}
   rules:
     - if: '$CI_COMMIT_TAG'
