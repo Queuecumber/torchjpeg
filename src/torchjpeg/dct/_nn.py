@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 
 import torch
 from torch import Tensor
@@ -104,20 +105,41 @@ def macroblock() -> Tensor:
     return B_t
 
 
-resizer = double_size_tensor()
-halfsizer = half_size_tensor()
-dct = D()
-reblocker = reblock()
-macroblocker = macroblock()
+class ResizeOps:  # pylint: disable=too-few-public-methods
+    """
+    Caches the resize operation tensors and enables them to be built on demand. Generally not for public use
+    """
 
-# block doubler combines the following linear operations in order: inverse DCT, NN doubling, reshape to 4 x 8 x 8, DCT, reshape back to 16 x 16
-block_doubler = torch.einsum("ijab,ijmn,mnzxy,xypq,zpqrw->abrw", dct, resizer, reblocker, dct, macroblocker)
+    resizer: Optional[Tensor] = None
+    halfsizer: Optional[Tensor] = None
+    dct: Optional[Tensor] = None
+    reblocker: Optional[Tensor] = None
+    macroblocker: Optional[Tensor] = None
+    block_doubler: Optional[Tensor] = None
+    block_halver: Optional[Tensor] = None
 
-# 16 x 16 -> 4 x 8 x 8 -> idct -> 16 x 16 -> resize -> dct
-block_halver = torch.einsum("mnzab,ijab,zijrw,rwxy,xypq->mnpq", reblocker, dct, macroblocker, halfsizer, dct)
+    @classmethod
+    def lazy_build_ops(cls) -> None:
+        """
+        Builds the resize operations
+        """
+
+        # HACK assume none of the operators are set if the first one isnt set
+        if cls.resizer is None:
+            cls.resizer = double_size_tensor()
+
+            cls.halfsizer = half_size_tensor()
+            cls.dct = D()
+            cls.reblocker = reblock()
+            cls.macroblocker = macroblock()
+
+            # block doubler combines the following linear operations in order: inverse DCT, NN doubling, reshape to 4 x 8 x 8, DCT, reshape back to 16 x 16
+            cls.block_doubler = torch.einsum("ijab,ijmn,mnzxy,xypq,zpqrw->abrw", cls.dct, cls.resizer, cls.reblocker, cls.dct, cls.macroblocker)
+            # 16 x 16 -> 4 x 8 x 8 -> idct -> 16 x 16 -> resize -> dct
+            cls.block_halver = torch.einsum("mnzab,ijab,zijrw,rwxy,xypq->mnpq", cls.reblocker, cls.dct, cls.macroblocker, cls.halfsizer, cls.dct)
 
 
-def double_nn_dct(input_dct: Tensor, op: Tensor = block_doubler) -> Tensor:
+def double_nn_dct(input_dct: Tensor, op: Optional[Tensor] = None) -> Tensor:
     r"""
     double_nn_dct(input_dct: Tensor, op: Tensor = block_doubler) -> Tensor:
 
@@ -133,7 +155,11 @@ def double_nn_dct(input_dct: Tensor, op: Tensor = block_doubler) -> Tensor:
     Returns:
         Tensor: The coefficients of the resized image, double the height and width of the input.
     """
-    if input_dct.is_cuda:
+    if op is None:
+        ResizeOps.lazy_build_ops()
+        op = ResizeOps.block_doubler
+
+    if input_dct.is_cuda and op is not None:
         op = op.cuda()
 
     dct_blocks = blockify(input_dct, 8)
@@ -143,7 +169,7 @@ def double_nn_dct(input_dct: Tensor, op: Tensor = block_doubler) -> Tensor:
     return deblocked_doubled
 
 
-def half_nn_dct(input_dct: Tensor, op: Tensor = block_halver) -> Tensor:
+def half_nn_dct(input_dct: Tensor, op: Optional[Tensor] = None) -> Tensor:
     r"""
     half_nn_dct(input_dct: Tensor, op: Tensor = block_halver) -> Tensor:
 
@@ -159,7 +185,11 @@ def half_nn_dct(input_dct: Tensor, op: Tensor = block_halver) -> Tensor:
     Returns:
         Tensor: The coefficients of the resized image, halg the height and width of the input.
     """
-    if input_dct.is_cuda:
+    if op is None:
+        ResizeOps.lazy_build_ops()
+        op = ResizeOps.block_halver
+
+    if input_dct.is_cuda and op is not None:
         op = op.cuda()
 
     dct_blocks = blockify(input_dct, 16)

@@ -18,7 +18,7 @@ build-venv:
     - python -m venv --copies .venv
     - source .venv/bin/activate
     - pip install --upgrade pip
-    - pip install "poetry==1.2.0"
+    - pip install "poetry==1.3.1"
     - poetry install --no-root
     - poetry run python build.py
     - ccache -s
@@ -140,8 +140,8 @@ build-wheel:
       - PYVER: [cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310]
   script:
     - yum install util-linux
-    - ${PYBIN}/pip install poetry==1.1.15
-    - ${PYBIN}/poetry run pip install "dunamai==1.3.0" "torch==1.13.0"
+    - ${PYBIN}/pip install poetry==1.3.1
+    - ${PYBIN}/poetry run pip install "dunamai==1.3.0" "torch==1.13.1"
     - ${PYBIN}/poetry version $(${PYBIN}/poetry run python version.py)
     - ${PYBIN}/poetry build
     - rename manylinux_2_28 manylinux2014 dist/*
@@ -186,7 +186,7 @@ pypi:
   stage: deploy
   image: python:3.10
   script:
-    - pip install "poetry==1.2.0"
+    - pip install "poetry==1.3.1"
     - poetry publish --username __token__ --password ${pypi_push_key}
   rules:
     - if: '$CI_COMMIT_TAG'
