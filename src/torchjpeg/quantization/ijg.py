@@ -19,7 +19,7 @@ luma_quant_matrix = torch.tensor([
     24,  35,  55,  64,  81, 104, 113,  92,
     49,  64,  78,  87, 103, 121, 120, 101,
     72,  92,  95,  98, 112, 100, 103,  99
-]) 
+])
 # fmt: on
 
 # Don't mess with matrix formatting
@@ -78,8 +78,7 @@ def scale_quantization_matrices(scale_factor: Tensor, table: str = "luma") -> Te
     elif table == "chroma":
         t = chroma_quant_matrix
 
-    if scale_factor.is_cuda:
-        t = t.cuda()
+    t = t.to(scale_factor.device)
 
     t = t.unsqueeze(0)
     scale_factor = scale_factor.unsqueeze(1)

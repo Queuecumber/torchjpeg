@@ -159,8 +159,8 @@ def double_nn_dct(input_dct: Tensor, op: Optional[Tensor] = None) -> Tensor:
         ResizeOps.lazy_build_ops()
         op = ResizeOps.block_doubler
 
-    if input_dct.is_cuda and op is not None:
-        op = op.cuda()
+    if op is not None:
+        op = op.to(input_dct.device)
 
     dct_blocks = blockify(input_dct, 8)
     dct_doubled = torch.einsum("abrw,ncdab->ncdrw", [op, dct_blocks])
@@ -189,8 +189,8 @@ def half_nn_dct(input_dct: Tensor, op: Optional[Tensor] = None) -> Tensor:
         ResizeOps.lazy_build_ops()
         op = ResizeOps.block_halver
 
-    if input_dct.is_cuda and op is not None:
-        op = op.cuda()
+    if op is not None:
+        op = op.to(input_dct.device)
 
     dct_blocks = blockify(input_dct, 16)
     dct_halved = torch.einsum("abrw,ncdab->ncdrw", [op, dct_blocks])

@@ -12,10 +12,7 @@ def ssim_single(
     C1 = 0.01**2
     C2 = 0.03**2
 
-    avg_filter = torch.ones(1, 1, 8, 8) / 64
-
-    if image.is_cuda:
-        avg_filter = avg_filter.cuda()
+    avg_filter = torch.ones(1, 1, 8, 8, device=image.device) / 64
 
     mu_i = torch.nn.functional.conv2d(image, avg_filter)
     mu_t = torch.nn.functional.conv2d(target, avg_filter)

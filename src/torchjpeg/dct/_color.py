@@ -20,7 +20,7 @@ def to_ycbcr(x: Tensor, data_range: float = 255) -> Tensor:
 
     Note
     -----
-    This function implements the "full range" conversion used by JPEG, e.g. it does **not** implement the ITU-R BT.601 standard which 
+    This function implements the "full range" conversion used by JPEG, e.g. it does **not** implement the ITU-R BT.601 standard which
     many libraries (excluding PIL) use as the default definition of YCbCr. This conversion (for [0, 255]) is given by:
 
     .. math::
@@ -29,7 +29,7 @@ def to_ycbcr(x: Tensor, data_range: float = 255) -> Tensor:
         C_{B}&=&128&-(0.168736&\cdot R)&-(0.331264&\cdot G)&+(0.5&\cdot B) \\
         C_{R}&=&128&+(0.5&\cdot R)&-(0.418688&\cdot G)&-(0.081312&\cdot B)
         \end{aligned}
-    
+
     """
     assert data_range in [1.0, 255]
 
@@ -38,17 +38,14 @@ def to_ycbcr(x: Tensor, data_range: float = 255) -> Tensor:
         0.29900, 0.58700, 0.11400,
         -0.168735892, -0.331264108, 0.50000,
         0.50000, -0.418687589, -0.081312411
-    ]).view(3, 3).transpose(0, 1)
+    ],
+    device=x.device).view(3, 3).transpose(0, 1)
     # fmt: on
 
     if data_range == 255:
-        b = torch.tensor([0, 128, 128]).view(3, 1, 1)
+        b = torch.tensor([0, 128, 128], device=x.device).view(3, 1, 1)
     else:
-        b = torch.tensor([0, 0.5, 0.5]).view(3, 1, 1)
-
-    if x.is_cuda:
-        ycbcr_from_rgb = ycbcr_from_rgb.cuda()
-        b = b.cuda()
+        b = torch.tensor([0, 0.5, 0.5], device=x.device).view(3, 1, 1)
 
     x = torch.einsum("cv,...cxy->...vxy", [ycbcr_from_rgb, x])
     x += b
@@ -74,7 +71,7 @@ def to_rgb(x: Tensor, data_range: float = 255) -> Tensor:
 
     Note
     -----
-    This function expects the input to be "full range" conversion used by JPEG, e.g. it does **not** implement the ITU-R BT.601 standard which 
+    This function expects the input to be "full range" conversion used by JPEG, e.g. it does **not** implement the ITU-R BT.601 standard which
     many libraries (excluding PIL) use as the default definition of YCbCr. If the input came from this library or from PIL it should be fine.
     The conversion (for [0, 255]) is given by:
 
@@ -84,7 +81,7 @@ def to_rgb(x: Tensor, data_range: float = 255) -> Tensor:
         G&=&Y&-0.344136&\cdot (C_{B}-128)&-0.714136&\cdot (C_{R}-128 ) \\
         B&=&Y&+1.772&\cdot (C_{B}-128)&
         \end{aligned}
-    
+
     """
     assert data_range in [1.0, 255]
 
@@ -93,17 +90,14 @@ def to_rgb(x: Tensor, data_range: float = 255) -> Tensor:
         1, 0, 1.40200,
         1, -0.344136286, -0.714136286,
         1, 1.77200, 0
-    ]).view(3, 3).transpose(0, 1)
+    ],
+    device=x.device).view(3, 3).transpose(0, 1)
     # fmt: on
 
     if data_range == 255:
-        b = torch.tensor([-179.456, 135.458816, -226.816]).view(3, 1, 1)
+        b = torch.tensor([-179.456, 135.458816, -226.816], device=x.device).view(3, 1, 1)
     else:
-        b = torch.tensor([-0.70374902, 0.531211043, -0.88947451]).view(3, 1, 1)
-
-    if x.is_cuda:
-        rgb_from_ycbcr = rgb_from_ycbcr.cuda()
-        b = b.cuda()
+        b = torch.tensor([-0.70374902, 0.531211043, -0.88947451], device=x.device).view(3, 1, 1)
 
     x = torch.einsum("cv,...cxy->...vxy", [rgb_from_ycbcr, x])
     x += b

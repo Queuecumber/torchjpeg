@@ -81,41 +81,27 @@ class Stats:
         raise NotImplementedError(f"Unknown norm type {normtype}, must be 01 or ms")
 
     def _mean_variance_f(self, blocks: Tensor, normtype: str = "y") -> Tensor:
-        m = self.mean[normtype]
-        s = self.std[normtype]
-
-        if blocks.is_cuda:
-            m = m.cuda()
-            s = s.cuda()
+        m = self.mean[normtype].to(blocks.device)
+        s = self.std[normtype].to(blocks.device)
 
         return (blocks - m) / s
 
     def _zero_one_f(self, blocks: Tensor, normtype: str = "y") -> Tensor:
-        m = -self.min[normtype]
+        m = -self.min[normtype].to(blocks.device)
         s = self.max[normtype] - self.min[normtype]
-
-        if blocks.is_cuda:
-            m = m.cuda()
-            s = s.cuda()
+        s = s.to(blocks.device)
 
         return (blocks + m) / s
 
     def _mean_variance_r(self, blocks: Tensor, normtype: str = "y") -> Tensor:
-        s = self.std[normtype]
-        m = self.mean[normtype]
-
-        if blocks.is_cuda:
-            m = m.cuda()
-            s = s.cuda()
+        s = self.std[normtype].to(blocks.device)
+        m = self.mean[normtype].to(blocks.device)
 
         return blocks * s + m
 
     def _zero_one_r(self, blocks: Tensor, normtype: str = "y") -> Tensor:
         s = self.max[normtype] - self.min[normtype]
-        m = -self.min[normtype]
-
-        if blocks.is_cuda:
-            m = m.cuda()
-            s = s.cuda()
+        s = s.to(blocks.device)
+        m = -self.min[normtype].to(blocks.device)
 
         return blocks * s - m

@@ -1,9 +1,9 @@
 r"""
 The :code:`torchjpeg.dct` package provides utilities for performing forward and inverse discrete cosine transforms on images.
 The dct routines are implemented in pytorch so they can be GPU accelerated and differentiated.
-While the routines here are restricted to two dimensional signals, the block size is configurable e.g. the DCT does 
+While the routines here are restricted to two dimensional signals, the block size is configurable e.g. the DCT does
 not need to be performed on only the :math:`8 \times 8` block size used by JPEG.
-This package includes additional utilities for splitting images into non-overlapping blocks, performing fast 
+This package includes additional utilities for splitting images into non-overlapping blocks, performing fast
 color transforms on Tensors, and normalizing DCT coefficients as preparation for input to a CNN.
 """
 import math
@@ -47,20 +47,20 @@ def block_dct(blocks: Tensor) -> Tensor:
 
     Args:
         blocks (Tensor): Non-overlapping blocks to perform the DCT on in :math:`(N, C, L, H, W)` format.
-    
+
     Returns:
         Tensor: The DCT coefficients of each block in the same shape as the input.
 
     Note:
-        The function computes the forward DCT on each block given by 
+        The function computes the forward DCT on each block given by
 
         .. math::
 
             D_{i,j}={\frac {1}{\sqrt{2N}}}\alpha (i)\alpha (j)\sum _{x=0}^{N}\sum _{y=0}^{N}I_{x,y}\cos \left[{\frac {(2x+1)i\pi }{2N}}\right]\cos \left[{\frac {(2y+1)j\pi }{2N}}\right]
-        
-        Where :math:`i,j` are the spatial frequency indices, :math:`N` is the block size and :math:`I` is the image with pixel positions :math:`x, y`. 
-        
-        :math:`\alpha` is a scale factor which ensures the transform is orthonormal given by 
+
+        Where :math:`i,j` are the spatial frequency indices, :math:`N` is the block size and :math:`I` is the image with pixel positions :math:`x, y`.
+
+        :math:`\alpha` is a scale factor which ensures the transform is orthonormal given by
 
         .. math::
 
@@ -68,17 +68,13 @@ def block_dct(blocks: Tensor) -> Tensor:
                     \frac{1}{\sqrt{2}}} &{\text{if }}u=0 \\
                     1 &{\text{otherwise}}
                 \end{cases}
-        
+
         There is technically no restriction on the range of pixel values but to match JPEG it is recommended to use the range [-128, 127].
     """
     N = blocks.shape[3]
 
-    n = _normalize(N)
-    h = _harmonics(N)
-
-    if blocks.is_cuda:
-        n = n.cuda()
-        h = h.cuda()
+    n = _normalize(N).to(blocks.device)
+    h = _harmonics(N).to(blocks.device)
 
     coeff = (2 / N) * n * (h.t() @ blocks @ h)
 
@@ -105,12 +101,8 @@ def block_idct(coeff: Tensor) -> Tensor:
     """
     N = coeff.shape[3]
 
-    n = _normalize(N)
-    h = _harmonics(N)
-
-    if coeff.is_cuda:
-        n = n.cuda()
-        h = h.cuda()
+    n = _normalize(N).to(coeff.device)
+    h = _harmonics(N).to(coeff.device)
 
     im = (2 / N) * (h @ (n * coeff) @ h.t())
     return im
@@ -377,8 +369,8 @@ def zigzag(coefficients: Tensor) -> Tensor:
         10, 19, 23, 32, 39, 45, 52, 54,
         20, 22, 33, 38, 46, 51, 55, 60,
         21, 34, 37, 47, 50, 56, 59, 61,
-        35, 36, 48, 49, 57, 58, 62, 63 
-    ]).long() 
+        35, 36, 48, 49, 57, 58, 62, 63
+    ]).long()
     # fmt: on
 
     if len(coefficients.shape) == 3:
