@@ -17,9 +17,10 @@ documentation = "https://queuecumber.gitlab.io/torchjpeg"
 
 classifiers = [
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: C++",
     "License :: OSI Approved :: MIT License",
@@ -33,25 +34,37 @@ include = ["src/libjpeg/*"]
 
 [tool.poetry.dependencies]
 
-python = ">= 3.7, < 3.11"
+python = ">= 3.8, < 4.0"
 
-torch = ">= 1.13.1, < 1.13.2"
-torchvision = ">= 0.14.1, < 0.14.2"
+# https://github.com/pytorch/pytorch/issues/100974
+# https://github.com/python-poetry/poetry/issues/7902
+torch = [
+    { url = "https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp311-cp311-linux_x86_64.whl", python = "~3.11"},
+    { url = "https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp310-cp310-linux_x86_64.whl", python = "~3.10"},
+    { url = "https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp39-cp39-linux_x86_64.whl", python = "~3.9"},
+    { url = "https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp38-cp38-linux_x86_64.whl", python = "~3.8"}
+]
+torchvision = [
+    { url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.2%2Bcu118-cp311-cp311-linux_x86_64.whl", python = "~3.11"},
+    { url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.2%2Bcu118-cp310-cp310-linux_x86_64.whl", python = "~3.10"},
+    { url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.2%2Bcu118-cp39-cp39-linux_x86_64.whl", python = "~3.9"},
+    { url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.2%2Bcu118-cp38-cp38-linux_x86_64.whl", python = "~3.8"}
+]
 
 Pillow = ">=7.2.0"
 
 [tool.poetry.dev-dependencies]
 
-dunamai = "^1.3.0"
+dunamai = "^1.15.0"
 
-invoke = "^1.4.1"
+invoke = "^2.1.2"
 colorama = "^0.4.3"
 
-black = { version = "^22.3.0", python = ">=3.7 <4.0" }
+black = { version = "^22.3.0", python = ">=3.8 <4.0" }
 isort = "^5.5.2"
 
-mypy = "0.971"  # TODO wait for new mypy release
-pylint = "2.9.6"
+mypy = "1.3.0"
+pylint = "2.17.4"
 
 sphinx = ">=2,<3"
 sphinxcontrib-katex = "^0.8.6"
@@ -65,10 +78,13 @@ pytest = "^6.0.0"
 coverage = "^5.2.1"
 pytest-cov = "^2.10.0"
 
+virtualenv = "20.23.0"
+setuptools= "67.8.0"
+
 [tool.black]
 
 line-length = 1000
-target-version = ["py37", "py38", "py39", "py310"] 
+target-version = ["py38", "py39", "py310", "py311"]
 
 [tool.pylint.master]
 
@@ -111,12 +127,13 @@ check_untyped_defs = true
 [tool.isort]
 
 profile = "black"
+line_length = 1000
 
 [build-system]
 
 requires = [
-    "poetry>=1.3.1",
-    "torch==1.13.1",
+    "poetry>=1.5.1",
+    "torch==2.0.1",
     "setuptools"
 ]
 build-backend = "poetry.masonry.api"

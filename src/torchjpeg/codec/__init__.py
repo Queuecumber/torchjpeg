@@ -11,9 +11,9 @@ from torch.nn.functional import interpolate
 
 from torchjpeg.dct import block_idct, deblockify, double_nn_dct, to_rgb
 
-from ._codec_ops import *
+from ._codec_ops import *  # pylint: disable=import-error
 
-__all__ = ["read_coefficients", "write_coefficients", "quantize_at_quality", "pixels_for_channel", "reconstruct_full_image"]
+__all__ = ["read_coefficients", "write_coefficients", "quantize_at_quality", "pixels_for_channel", "reconstruct_full_image"]  # pylint: disable=undefined-all-variable
 
 
 def pixels_for_channel(channel: Tensor, quantization: Tensor, crop: Optional[Tensor] = None) -> Tensor:

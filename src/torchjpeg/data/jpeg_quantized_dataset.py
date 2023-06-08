@@ -5,14 +5,8 @@ import torch
 from torch.functional import Tensor
 from torch.utils.data import Dataset
 
-from torchjpeg.codec import quantize_at_quality  # type: ignore
-from torchjpeg.dct import (
-    Stats,
-    deblockify,
-    images_to_batch,
-    normalize,
-    pad_to_block_multiple,
-)
+from torchjpeg.codec import quantize_at_quality  # type: ignore # pylint: disable=no-name-in-module
+from torchjpeg.dct import Stats, deblockify, images_to_batch, normalize, pad_to_block_multiple
 from torchjpeg.quantization.ijg import quantization_max
 
 from .image_list import ImageList
