@@ -143,7 +143,7 @@ build-wheel:
   script:
     - yum install util-linux
     - ${PYBIN}/pip install poetry==1.5.1
-    - ${PYBIN}/poetry run pip install "dunamai==1.15.0" "torch==2.0.1"
+    - ${PYBIN}/poetry run pip install "dunamai==1.15.0" "torch==2.0.0"
     - ${PYBIN}/poetry version $(${PYBIN}/poetry run python version.py)
     - ${PYBIN}/poetry build
     - rename manylinux_2_28 manylinux2014 dist/*
