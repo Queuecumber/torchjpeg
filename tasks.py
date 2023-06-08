@@ -53,7 +53,7 @@ def style(c):
 def dco(c):
     print(f"{Fore.BLUE}Checking For DCO{Style.RESET_ALL}")
 
-    c.run("git remote add upstream-dco-check https://gitlab.com/Queuecumber/torchjpeg.git", warn=True, hide=True)
+    c.run("git remote add upstream-dco-check https://gitlab.com/torchjpeg/torchjpeg.git", warn=True, hide=True)
     c.run("git fetch -n upstream-dco-check", warn=True, hide=True)
     r = c.run('git rev-list HEAD ^remotes/upstream-dco-check/master --count --grep "Signed-off-by: .*( <.*@.*>)?$" --invert-grep --extended-regexp', warn=True, hide=True)
     c.run("git remote remove upstream-dco-check", warn=True, hide=True)
@@ -98,7 +98,7 @@ def test(c, which="all"):
 
 @task
 def squashhelp(c, short=False):
-    c.run("git remote add upstream-squashhelp https://gitlab.com/Queuecumber/torchjpeg.git", warn=True, hide=True)
+    c.run("git remote add upstream-squashhelp https://gitlab.com/torchjpeg/torchjpeg.git", warn=True, hide=True)
     c.run("git fetch -n upstream-squashhelp", hide=True)
     rev = c.run("git merge-base HEAD upstream-squashhelp/master", warn=True, hide=True)
     c.run("git remote remove upstream-squashhelp", warn=True, hide=True)
