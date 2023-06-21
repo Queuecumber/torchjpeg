@@ -10,9 +10,9 @@ authors = [
 license = "MIT"
 readme = "README.md"
 
-homepage = "https://queuecumber.gitlab.io/torchjpeg"
-repository = "https://gitlab.com/Queuecumber/torchjpeg"
-documentation = "https://queuecumber.gitlab.io/torchjpeg"
+homepage = "https://torchjpeg.gitlab.io/torchjpeg/"
+repository = "https://gitlab.com/torchjpeg/torchjpeg"
+documentation = "https://torchjpeg.gitlab.io/torchjpeg/"
 
 
 classifiers = [

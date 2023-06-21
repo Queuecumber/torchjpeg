@@ -198,16 +198,17 @@ pypi:
       when: on_success
   dependencies:
     - build-wheel
-# pages:
-#   stage: deploy
-#   image: python:3.11
-#   script:
-#     - mv doc/build/html public
-#   artifacts:
-#     paths:
-#       - public
-#   dependencies:
-#     - build-docs
-#   rules:
-#     - if: "$CI_COMMIT_TAG"
-#       when: on_success
+
+pages:
+  stage: deploy
+  image: python:3.11
+  script:
+    - mv doc/build/html public
+  artifacts:
+    paths:
+      - public
+  dependencies:
+    - build-docs
+  rules:
+    - if: "$CI_COMMIT_TAG"
+      when: on_success
