@@ -28,9 +28,13 @@ classifiers = [
     "Development Status :: 3 - Alpha"
 ]
 
-build = "build.py"
 
 include = ["src/libjpeg/*"]
+
+[tool.poetry.build]
+
+script = "build.py"
+generate-setup-file = true
 
 [tool.poetry.dependencies]
 
@@ -120,8 +124,7 @@ line_length = 1000
 [build-system]
 
 requires = [
-    "poetry>=1.5.1",
+    "poetry-core",
     "torch==2.0.0",
-    "setuptools"
 ]
-build-backend = "poetry.masonry.api"
+build-backend = "poetry.core.masonry.api"
