@@ -1,7 +1,7 @@
 # TorchJPEG
 
-[![pipeline status](https://gitlab.com/Queuecumber/torchjpeg/badges/master/pipeline.svg)](https://gitlab.com/Queuecumber/torchjpeg/-/pipelines/latest)
-[![coverage report](https://gitlab.com/Queuecumber/torchjpeg/badges/master/coverage.svg)](https://gitlab.com/Queuecumber/torchjpeg/-/pipelines/latest)
+[![pipeline status](https://gitlab.com/torchjpeg/torchjpeg/badges/master/pipeline.svg)](https://gitlab.com/torchjpeg/torchjpeg/-/commits/master) 
+[![coverage report](https://gitlab.com/torchjpeg/torchjpeg/badges/master/coverage.svg)](https://gitlab.com/torchjpeg/torchjpeg/-/commits/master) 
 [![PyPI](https://img.shields.io/pypi/v/torchjpeg)](https://pypi.org/project/torchjpeg/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://gitlab.com/Queuecumber/torchjpeg/-/blob/master/LICENSE)
 
@@ -40,6 +40,6 @@ changes.
 
 ## Citation
 
-If you use our code in a publication, we ask that you cite the following paper ([bibtex](http://maxehr.umiacs.io/bibtex/ehrlich2020quantization.txt)):
+If you use our code in a publication, we ask that you cite the following paper ([bibtex](http://softmax.me/bibtex/ehrlich2020quantization.txt)):
 
 > Max Ehrlich, Larry Davis, Ser-Nam Lim, and Abhinav Shrivastava. "Quantization Guided JPEG Artifact Correction." In Proceedings of the European Conference on Computer Vision, 2020

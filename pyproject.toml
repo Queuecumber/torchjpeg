@@ -10,9 +10,9 @@ authors = [
 license = "MIT"
 readme = "README.md"
 
-homepage = "https://torchjpeg.gitlab.io/torchjpeg/"
+homepage = "https://torchjpeg.readthedocs.io"
 repository = "https://gitlab.com/torchjpeg/torchjpeg"
-documentation = "https://torchjpeg.gitlab.io/torchjpeg/"
+documentation = "https://torchjpeg.readthedocs.io"
 
 
 classifiers = [
@@ -45,7 +45,7 @@ torchvision = ">= 0.15.1, < 0.15.2"
 
 Pillow = ">=7.2.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 
 dunamai = "^1.15.0"
 
@@ -58,20 +58,21 @@ isort = "^5.5.2"
 mypy = "1.3.0"
 pylint = "2.17.4"
 
-sphinx = ">=2,<3"
-sphinxcontrib-katex = "^0.8.6"
-pydocstyle = "^5.0.2"
-sphinx-book-theme = "^0.0.34"
-myst-parser = "^0.9.1"
-jinja2 = "<3.1"
-
 pytest = "^6.0.0"
 
 coverage = "^5.2.1"
 pytest-cov = "^2.10.0"
 
 virtualenv = "20.23.0"
-setuptools= "67.8.0"
+setuptools = "67.8.0"
+
+[tool.poetry.group.doc.dependencies]
+sphinx = ">=2,<3"
+sphinxcontrib-katex = "^0.8.6"
+pydocstyle = "^5.0.2"
+sphinx-book-theme = "^0.0.34"
+myst-parser = "^0.9.1"
+jinja2 = "<3.1"
 
 [tool.black]
 

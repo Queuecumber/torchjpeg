@@ -67,7 +67,7 @@ html_sourcelink_suffix = ""
 
 html_logo = "_static/torchjpeg-logo.png"
 html_favicon = "_static/torchjpeg-logo.png"
-html_theme_options = {"repository_url": "https://gitlab.com/Queuecumber/torchjpeg", "use_repository_button": True, "use_issues_button": True, "expand_sections": ["api/index"]}
+html_theme_options = {"repository_url": "https://gitlab.com/torchjpeg/torchjpeg", "use_repository_button": True, "use_issues_button": True, "expand_sections": ["api/index"]}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
